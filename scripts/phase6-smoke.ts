@@ -44,7 +44,7 @@ async function main() {
     toml.includes("example.com") || toml.includes("REPLACE_WITH_PRODUCTION_HOST");
   if (stillPlaceholder) {
     console.log(
-      "  ⚠ application_url still a placeholder — set Railway HTTPS URL via scripts/set-production-url.ps1",
+      "  ⚠ application_url still a placeholder — set Render HTTPS URL via scripts/set-production-url.ps1",
     );
   } else {
     assert(true, "application_url is a real host");
