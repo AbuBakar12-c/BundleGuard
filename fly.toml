@@ -1,0 +1,35 @@
+# Fly.io app config for BundleGuard (Node + React Router).
+# First time: install Fly CLI → fly auth login → fly launch --no-deploy
+# Then: fly postgres create → attach → set secrets → fly deploy
+# Docs: docs/production-deploy.md
+
+app = "bundleguard"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  SHOPIFY_BILLING_TEST = "false"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "40s"
+    method = "GET"
+    path = "/readyz"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

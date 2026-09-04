@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  // Local default: sqlite + DATABASE_URL=file:dev.sqlite
+  // Production: change provider to "postgresql" and use a Postgres DATABASE_URL
+  // See docs/production-deploy.md
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+
+  @@index([shop])
+}
+
+model Bundle {
+  id                String            @id @default(cuid())
+  shop              String
+  title             String
+  productId         String
+  productVariantId  String
+  price             String            @default("0.00")
+  oosRule           String            @default("block_when_any_component_oos")
+  status            String            @default("healthy")
+  availableQuantity Int               @default(0)
+  blockReason       String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  components        BundleComponent[]
+
+  @@index([shop])
+  @@index([productVariantId])
+}
+
+model BundleComponent {
+  id               String  @id @default(cuid())
+  bundleId         String
+  productId        String
+  productVariantId String
+  productTitle     String
+  variantTitle     String
+  quantity         Int     @default(1)
+  inventoryPolicy  String  @default("DENY")
+  availableQty     Int     @default(0)
+  sku              String?
+  bundle           Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@index([bundleId])
+  @@index([productVariantId])
+}
+
+model InventoryAlert {
+  id           String    @id @default(cuid())
+  shop         String
+  bundleId     String
+  severity     String
+  kind         String
+  message      String
+  sku          String?
+  locationName String?
+  createdAt    DateTime  @default(now())
+  readAt       DateTime?
+
+  @@index([shop, readAt])
+  @@index([bundleId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  shop      String
+  role      String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+}
+
+model ShopAssistantSettings {
+  shop           String   @id
+  buyerEnabled   Boolean  @default(true)
+  welcomeMessage String   @default("Hi! I can help you find products and check what's in stock.")
+  updatedAt      DateTime @updatedAt
+}
+
+model ShopperLead {
+  id          String             @id @default(cuid())
+  shop        String
+  name        String
+  email       String
+  status      String             @default("captured")
+  source      String             @default("shopper_chat")
+  sessionKey  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  messages    BuyerChatMessage[]
+
+  @@index([shop, createdAt])
+  @@index([shop, status])
+  @@unique([shop, email])
+}
+
+model BuyerChatMessage {
+  id        String       @id @default(cuid())
+  shop      String
+  role      String
+  text      String
+  leadId    String?
+  lead      ShopperLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+
+  @@index([shop, createdAt])
+  @@index([leadId])
+}
+
+/// Stored GDPR customers/data_request exports for merchant fulfillment (shop-scoped).
+model ComplianceExport {
+  id        String   @id @default(cuid())
+  shop      String
+  topic     String
+  email     String?
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+}
+
+/// Webhook delivery idempotency (shop + topic + Shopify webhook id).
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  shop        String
+  topic       String
+  webhookId   String
+  processedAt DateTime @default(now())
+
+  @@unique([shop, topic, webhookId])
+  @@index([shop, processedAt])
+}

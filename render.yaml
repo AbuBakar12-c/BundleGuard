@@ -1,0 +1,47 @@
+# BundleGuard on Render — Web Service (Docker) + Postgres
+# Docs: docs/render-deploy.md
+# Deploy: connect this repo at https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: bundleguard
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /readyz
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SHOPIFY_BILLING_TEST
+        value: "false"
+      - key: SCOPES
+        value: read_products,write_products,read_inventory,read_locations,read_orders,write_app_proxy
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bundleguard-db
+          property: connectionString
+      # Set in Render Dashboard after first deploy (sync: false = secret / manual)
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SHOPIFY_APP_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: PRIVACY_EMAIL
+        sync: false
+      - key: COMPANY_NAME
+        sync: false
+
+databases:
+  - name: bundleguard-db
+    plan: free
+    region: oregon
+    databaseName: bundleguard
+    user: bundleguard

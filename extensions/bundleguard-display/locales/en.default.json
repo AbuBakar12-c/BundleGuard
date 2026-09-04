@@ -1,0 +1,11 @@
+{
+  "name": "BundleGuard Display",
+  "settings": {
+    "show_availability": {
+      "label": "Show bundle availability badge"
+    },
+    "low_stock_threshold": {
+      "label": "Low stock threshold"
+    }
+  }
+}

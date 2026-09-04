@@ -1,0 +1,24 @@
+# Optional local Postgres for production-like runs.
+# Usage:
+#   docker compose up -d db
+#   Then set DATABASE_URL in .env (see docs/production-deploy.md) and switch Prisma provider to postgresql.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bundleguard
+      POSTGRES_PASSWORD: bundleguard
+      POSTGRES_DB: bundleguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - bundleguard_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bundleguard -d bundleguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bundleguard_pg:

@@ -1,0 +1,51 @@
+# Alternate Partner app config — KEEP IN SYNC with shopify.app.toml for scopes/webhooks/proxy.
+# Prefer linking/deploying shopify.app.toml unless this client_id is intentionally used.
+# Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "8742cf27d80a54b601ca11a0e03acfa5"
+name = "BundleGuard"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+# Avoid wiping production subscriptions with a stale config by accident.
+include_config_on_deploy = false
+
+[webhooks]
+api_version = "2025-10"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["inventory_levels/update"]
+  uri = "/webhooks/inventory/update"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/compliance"
+
+[access_scopes]
+scopes = "read_products,write_products,read_inventory,read_locations,read_orders,write_app_proxy"
+
+[auth]
+redirect_urls = [
+  "https://example.com/auth/callback",
+  "https://example.com/auth/shopify/callback",
+  "https://example.com/api/auth/callback",
+]
+
+[app_proxy]
+url = "/apps/bundleguard"
+subpath = "bundleguard"
+prefix = "apps"

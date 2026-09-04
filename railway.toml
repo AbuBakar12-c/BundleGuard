@@ -1,0 +1,17 @@
+# BundleGuard on Railway — long-running Node + managed Postgres
+# Dashboard: https://railway.app
+# Docs: docs/railway-deploy.md
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/readyz"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+[service]
+# Railway injects PORT; our app reads process.env.PORT (react-router-serve)
+internalPort = 3000

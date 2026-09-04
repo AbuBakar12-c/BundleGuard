@@ -1,0 +1,19 @@
+api_version = "2025-10"
+
+[[extensions]]
+name = "bundleguard-display"
+handle = "bundleguard-display"
+
+uid = "fcd3aa16-71e8-607d-d3b6-385c8d4c50d637c2864d"
+type = "theme"
+
+[extensions.capabilities]
+block_progress = true
+
+[[extensions.targeting]]
+target = "section"
+module = "./blocks/bundle-availability.liquid"
+
+[[extensions.targeting]]
+target = "body"
+module = "./blocks/shopper-assistant.liquid"

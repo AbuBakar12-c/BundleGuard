@@ -1,0 +1,72 @@
+{% comment %}
+  BundleGuard Theme App Extension
+  Displays bundle availability status on product pages.
+  Merchants add this block via Theme Editor > App embeds.
+{% endcomment %}
+
+{% if block.settings.show_availability %}
+  <div class="bundleguard-availability" data-bundleguard-block>
+    {% if product.selected_or_first_available_variant.available %}
+      {% assign threshold = block.settings.low_stock_threshold | default: 5 %}
+      {% if product.selected_or_first_available_variant.inventory_quantity <= threshold and product.selected_or_first_available_variant.inventory_quantity > 0 %}
+        <span class="bundleguard-badge bundleguard-badge--warning">
+          Bundle available — low stock ({{ product.selected_or_first_available_variant.inventory_quantity }} left)
+        </span>
+      {% else %}
+        <span class="bundleguard-badge bundleguard-badge--success">
+          Bundle in stock
+        </span>
+      {% endif %}
+    {% else %}
+      <span class="bundleguard-badge bundleguard-badge--blocked">
+        Bundle unavailable — component inventory issue
+      </span>
+    {% endif %}
+  </div>
+
+  <style>
+    .bundleguard-availability {
+      margin: 0.75rem 0;
+    }
+    .bundleguard-badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .bundleguard-badge--success {
+      background: #e3f1df;
+      color: #108043;
+    }
+    .bundleguard-badge--warning {
+      background: #ffef9d;
+      color: #8a6116;
+    }
+    .bundleguard-badge--blocked {
+      background: #fde2e2;
+      color: #d82c0d;
+    }
+  </style>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Bundle availability",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_availability",
+      "label": "Show bundle availability badge",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "low_stock_threshold",
+      "label": "Low stock threshold",
+      "default": 5
+    }
+  ]
+}
+{% endschema %}

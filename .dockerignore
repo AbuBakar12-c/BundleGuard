@@ -1,0 +1,14 @@
+.cache
+build
+node_modules
+.env
+.env.*
+!.env.example
+production.inputs.env
+production.railway.vars.env
+prisma/dev.sqlite
+prisma/dev.sqlite-journal
+*.sqlite
+.git
+.shopify
+.react-router

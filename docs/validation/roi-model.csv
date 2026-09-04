@@ -1,0 +1,4 @@
+year,scenario,paid_customers,arpu_usd,mrr_usd,arr_usd
+1,pessimistic,160,35,5600,67200
+1,base,400,39,15600,187200
+1,optimistic,2400,42,100800,1209600

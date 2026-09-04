@@ -1,0 +1,18 @@
+# Fallback if Railway is not using Dockerfile (railway.toml prefers Dockerfile).
+# Mirrors docker-start: migrate/setup then serve.
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "openssl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = [
+  "node scripts/switch-db-provider.mjs postgres",
+  "npx prisma generate",
+  "npm run build",
+]
+
+[start]
+cmd = "npm run docker-start"

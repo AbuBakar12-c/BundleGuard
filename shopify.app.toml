@@ -1,0 +1,55 @@
+# BundleGuard — Smart Bundle Inventory for Shopify
+# Canonical Partner config (client_id must match SHOPIFY_API_KEY).
+#
+# LOCAL DEV: `npm run dev` uses shopify.app.dev.toml (tunnel URL rewrite).
+# PRODUCTION: set application_url + redirect_urls to your real HTTPS host
+#             BEFORE `npx shopify app deploy`. Never ship example.com.
+# Runtime app URL always comes from SHOPIFY_APP_URL (env), not this file alone.
+name = "BundleGuard"
+client_id = "3b45a17a670fcf5e8c0184097a7cd055"
+# PLACEHOLDER — replace with production HTTPS host before App Store deploy
+application_url = "https://REPLACE_WITH_PRODUCTION_HOST"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "bundleguard-nkhkwmsy.myshopify.com"
+# include_config_on_deploy = true  # enable when deploying production URLs
+
+[auth]
+redirect_urls = [
+  "https://REPLACE_WITH_PRODUCTION_HOST/auth/callback",
+  "https://REPLACE_WITH_PRODUCTION_HOST/auth/shopify/callback",
+  "https://REPLACE_WITH_PRODUCTION_HOST/api/auth/callback",
+]
+
+[access_scopes]
+scopes = "read_products,write_products,read_inventory,read_locations,read_orders,write_app_proxy"
+
+[webhooks]
+api_version = "2025-10"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["inventory_levels/update"]
+  uri = "/webhooks/inventory/update"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/compliance"
+
+[app_proxy]
+url = "/apps/bundleguard"
+prefix = "apps"
+subpath = "bundleguard"

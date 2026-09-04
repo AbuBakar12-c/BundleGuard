@@ -1,0 +1,41 @@
+# Local/dev only — CLI rewrites application_url to your Cloudflare tunnel.
+# Do NOT use this file for production `shopify app deploy`.
+# Production deploy must use shopify.app.toml with a real HTTPS host.
+name = "BundleGuard"
+client_id = "3b45a17a670fcf5e8c0184097a7cd055"
+application_url = "https://REPLACE_WITH_DEV_TUNNEL"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "bundleguard-nkhkwmsy.myshopify.com"
+
+[auth]
+redirect_urls = [
+  "https://REPLACE_WITH_DEV_TUNNEL/auth/callback",
+  "https://REPLACE_WITH_DEV_TUNNEL/auth/shopify/callback",
+  "https://REPLACE_WITH_DEV_TUNNEL/api/auth/callback",
+]
+
+[access_scopes]
+scopes = "read_products,write_products,read_inventory,read_locations,read_orders,write_app_proxy"
+
+[webhooks]
+api_version = "2025-10"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = ["inventory_levels/update"]
+  uri = "/webhooks/inventory/update"
+
+[app_proxy]
+url = "/apps/bundleguard"
+prefix = "apps"
+subpath = "bundleguard"

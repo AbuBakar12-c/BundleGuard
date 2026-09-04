@@ -1,0 +1,1442 @@
+{% comment %}
+  BundleGuard Shopper Assistant — Zipchat-style storefront widget
+  Enable via Theme Editor → App embeds
+{% endcomment %}
+
+<div id="bundleguard-shopper-root" data-proxy-url="/apps/bundleguard/chat"></div>
+
+<style>
+  #bundleguard-shopper-root {
+    --bg-primary: #008060;
+    --bg-dark: #004c3f;
+    --text-main: #202223;
+    --text-muted: #6d7175;
+    --border: #e1e3e5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  @keyframes bg-launcher-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 0 rgba(0, 128, 96, 0.5),
+        0 8px 24px rgba(0, 128, 96, 0.28);
+    }
+    50% {
+      box-shadow:
+        0 0 0 10px rgba(0, 128, 96, 0),
+        0 8px 28px rgba(0, 128, 96, 0.38);
+    }
+  }
+
+  @keyframes bg-launcher-glow {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+
+  @keyframes bg-panel-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes bg-msg-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bg-dot-bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  @keyframes bg-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .bg-shopper-launcher-wrap {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 99999;
+  }
+
+  .bg-shopper-launcher-glow {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 128, 96, 0.35) 0%, rgba(0, 128, 96, 0) 70%);
+    animation: bg-launcher-glow 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .bg-shopper-launcher-wrap.is-open .bg-shopper-launcher-glow {
+    display: none;
+  }
+
+  .bg-shopper-launcher {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--bg-dark), var(--bg-primary));
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+    animation: bg-launcher-pulse 2.2s ease-in-out infinite;
+  }
+
+  .bg-shopper-launcher-wrap.is-open .bg-shopper-launcher {
+    animation: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #1a1a1a, #303030);
+  }
+
+  .bg-shopper-launcher svg {
+    width: 26px;
+    height: 26px;
+    position: absolute;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .bg-launcher-icon--close {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.7);
+  }
+
+  .bg-shopper-launcher-wrap.is-open .bg-launcher-icon--chat {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.7);
+  }
+
+  .bg-shopper-launcher-wrap.is-open .bg-launcher-icon--close {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  .bg-shopper-launcher:hover {
+    transform: scale(1.06);
+  }
+
+  .bg-shopper-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 88px;
+    width: min(380px, calc(100vw - 24px));
+    height: 560px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99999;
+    transform-origin: bottom right;
+  }
+
+  .bg-shopper-panel.open {
+    display: flex;
+    animation: bg-panel-in 0.28s ease-out;
+  }
+
+  .bg-shopper-header {
+    background: linear-gradient(135deg, var(--bg-dark), var(--bg-primary));
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .bg-shopper-header-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .bg-shopper-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .bg-shopper-logo svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bg-shopper-header strong { display: block; font-size: 15px; }
+  .bg-shopper-header span { font-size: 12px; opacity: 0.9; }
+
+  .bg-shopper-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+    transition: background 0.15s;
+  }
+
+  .bg-shopper-close:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .bg-shopper-close svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bg-shopper-messages {
+    flex: 1;
+    min-height: 280px;
+    overflow-y: auto;
+    padding: 14px;
+    background: #fafbfc;
+    scroll-behavior: smooth;
+  }
+
+  .bg-msg {
+    max-width: 88%;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    animation: bg-msg-in 0.25s ease-out;
+    letter-spacing: 0.01em;
+  }
+
+  .bg-msg.assistant {
+    background: #fff;
+    border: 1px solid #e8eaed;
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  }
+
+  .bg-msg.user {
+    margin-left: auto;
+    background: var(--bg-primary);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .bg-msg.user img {
+    display: block;
+    max-width: 180px;
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+
+  .bg-typing {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .bg-typing span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #8c9196;
+    animation: bg-dot-bounce 1.2s infinite;
+  }
+
+  .bg-typing span:nth-child(2) { animation-delay: 0.15s; }
+  .bg-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+  .bg-reco-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0 12px;
+    max-width: 100%;
+  }
+
+  .bg-product-card {
+    border: 1px solid #e8eaed;
+    border-radius: 14px;
+    padding: 10px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    animation: bg-msg-in 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .bg-product-card:hover {
+    border-color: #b7e0d0;
+    box-shadow: 0 4px 14px rgba(0, 128, 96, 0.1);
+  }
+
+  .bg-product-card img,
+  .bg-product-card .bg-product-placeholder {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f4f6f8, #eef1f4);
+  }
+
+  .bg-product-meta {
+    min-width: 0;
+  }
+
+  .bg-product-card a {
+    color: #0f172a;
+    font-weight: 650;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+    line-height: 1.35;
+  }
+
+  .bg-product-card a:hover {
+    color: var(--bg-primary);
+  }
+
+  .bg-product-price {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bg-dark);
+  }
+
+  .bg-product-meta small {
+    color: var(--text-muted);
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
+  .bg-stock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .bg-stock-pill.in {
+    background: #e8f5ef;
+    color: #0d7a4f;
+  }
+
+  .bg-stock-pill.out {
+    background: #f6f6f7;
+    color: #6d7175;
+  }
+
+  .bg-product-cta {
+    border: none;
+    background: var(--bg-primary);
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .bg-product-cta:hover {
+    background: var(--bg-dark);
+  }
+
+  .bg-shopper-suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 12px 10px;
+    background: #fafbfc;
+  }
+
+  .bg-shopper-suggestions button {
+    border: 1px solid #e2e5e9;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #202223;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .bg-shopper-suggestions button:hover {
+    border-color: var(--bg-primary);
+    background: #e8f5ef;
+    color: var(--bg-dark);
+  }
+
+  .bg-image-preview {
+    display: none;
+    padding: 8px 12px 0;
+    background: #fff;
+    border-top: 1px solid #eceef0;
+  }
+
+  .bg-image-preview.visible { display: block; }
+
+  .bg-image-preview-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f6f6f7;
+    border-radius: 10px;
+    padding: 6px 8px;
+  }
+
+  .bg-image-preview img {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .bg-image-preview button {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .bg-shopper-input {
+    border-top: 1px solid #eceef0;
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #fff;
+  }
+
+  .bg-shopper-input input[type="text"] {
+    flex: 1;
+    border: 1px solid #d2d5d8;
+    border-radius: 20px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .bg-shopper-input input[type="text"]:focus {
+    border-color: var(--bg-primary);
+  }
+
+  .bg-shopper-input input[type="file"] { display: none; }
+
+  .bg-btn-icon {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #d2d5d8;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .bg-btn-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bg-btn-icon:hover {
+    border-color: var(--bg-primary);
+    color: var(--bg-primary);
+    background: #f0faf7;
+  }
+
+  .bg-btn-send {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .bg-btn-send svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .bg-btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .bg-icon-btn-plain {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .bg-icon-btn-plain:hover {
+    background: #eceef0;
+    color: var(--text-main);
+  }
+
+  .bg-icon-btn-plain svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .bg-btn-send.loading svg { display: none; }
+
+  .bg-btn-send.loading::after {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: bg-spin 0.7s linear infinite;
+  }
+
+  .bg-lead-gate {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #f6f7f8;
+  }
+
+  .bg-lead-gate h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: var(--text-main);
+  }
+
+  .bg-lead-gate p {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .bg-lead-gate label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+  }
+
+  .bg-lead-gate input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    outline: none;
+  }
+
+  .bg-lead-gate input:focus {
+    border-color: var(--bg-primary);
+    box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.15);
+  }
+
+  .bg-lead-error {
+    display: none;
+    font-size: 12px;
+    color: #d72c0d;
+    margin: -4px 0 10px;
+  }
+
+  .bg-lead-error.visible {
+    display: block;
+  }
+
+  .bg-lead-submit {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: var(--bg-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 11px 14px;
+    cursor: pointer;
+  }
+
+  .bg-lead-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .bg-chat-locked .bg-shopper-suggestions,
+  .bg-chat-locked .bg-shopper-input,
+  .bg-chat-locked .bg-image-preview {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .bg-lead-gate.hidden {
+    display: none;
+  }
+
+  .bg-quiz-card {
+    margin: 4px 12px 12px;
+    border: 1px solid #e8eaed;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(16, 24, 40, 0.08);
+    overflow: hidden;
+    animation: bg-panel-in 0.25s ease-out;
+  }
+
+  .bg-quiz-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 14px 6px;
+  }
+
+  .bg-quiz-card-header strong {
+    font-size: 15px;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+
+  .bg-quiz-card-header span {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .bg-quiz-close {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+
+  .bg-quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px 12px;
+  }
+
+  .bg-quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid #eef0f2;
+    background: #fafbfc;
+    text-align: left;
+    padding: 12px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #202223;
+    transition: all 0.15s ease;
+  }
+
+  .bg-quiz-option:hover {
+    background: #e8f5ef;
+    border-color: #b7e0d0;
+    color: var(--bg-dark);
+  }
+
+  .bg-quiz-option-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--bg-dark), var(--bg-primary));
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .bg-quiz-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 12px;
+    border-top: 1px solid #f0f1f2;
+  }
+
+  .bg-quiz-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .bg-quiz-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d2d5d8;
+  }
+
+  .bg-quiz-dot.active {
+    background: var(--bg-primary);
+  }
+
+  .bg-quiz-nav {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-primary);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bg-quiz-nav:disabled {
+    background: #e4e6e8;
+    color: #9aa0a6;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById("bundleguard-shopper-root");
+    if (!root || root.dataset.initialized === "true") return;
+    root.dataset.initialized = "true";
+
+    const proxyUrl = root.dataset.proxyUrl || "/apps/bundleguard/chat";
+    let suggestions = [
+      "Show me best sellers",
+      "Find products under $50",
+      "What's in stock today?",
+    ];
+
+    root.innerHTML = `
+      <div class="bg-shopper-launcher-wrap">
+        <div class="bg-shopper-launcher-glow" aria-hidden="true"></div>
+        <button class="bg-shopper-launcher" aria-label="Open shopping assistant" aria-expanded="false">
+          <svg class="bg-launcher-icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <svg class="bg-launcher-icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <section class="bg-shopper-panel" aria-label="BundleGuard shopper assistant">
+        <div class="bg-shopper-header">
+          <div class="bg-shopper-header-main">
+            <div class="bg-shopper-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div>
+              <strong>BundleGuard Shopper AI</strong>
+              <span>Find products & recommendations</span>
+            </div>
+          </div>
+          <button type="button" class="bg-shopper-close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="bg-lead-gate" id="bg-lead-gate">
+          <h3>Before we start</h3>
+          <p>Share your name and email so we can help you (same as our assessment form).</p>
+          <form class="bg-lead-form">
+            <label for="bg-lead-name">Full name</label>
+            <input id="bg-lead-name" name="name" type="text" autocomplete="name" placeholder="Jane Doe" required />
+            <label for="bg-lead-email">Email</label>
+            <input id="bg-lead-email" name="email" type="email" autocomplete="email" placeholder="jane@email.com" required />
+            <div class="bg-lead-error" role="alert"></div>
+            <button type="submit" class="bg-lead-submit">Continue to chat</button>
+          </form>
+        </div>
+        <div class="bg-shopper-messages">
+          <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock.</div>
+        </div>
+        <div class="bg-shopper-suggestions">
+          <button type="button" data-suggestion="Show me best sellers">Show me best sellers</button>
+          <button type="button" data-suggestion="Find products under $50">Find products under $50</button>
+          <button type="button" data-suggestion="What's in stock today?">What's in stock today?</button>
+        </div>
+        <div class="bg-image-preview">
+          <div class="bg-image-preview-inner">
+            <img alt="Upload preview" />
+            <span style="font-size:12px;color:#6d7175;">Product photo attached</span>
+            <button type="button" class="bg-icon-btn-plain bg-remove-image" aria-label="Remove image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <form class="bg-shopper-input">
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="bg-file-input" />
+          <button type="button" class="bg-btn-icon bg-upload-btn" aria-label="Upload product image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <path d="m21 15-5-5L5 21"></path>
+            </svg>
+          </button>
+          <input type="text" placeholder="Ask about products..." autocomplete="off" />
+          <button type="submit" class="bg-btn-send" aria-label="Send message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+      </section>
+    `;
+
+    const launcherWrap = root.querySelector(".bg-shopper-launcher-wrap");
+    const launcher = root.querySelector(".bg-shopper-launcher");
+    const panel = root.querySelector(".bg-shopper-panel");
+    const closeBtn = root.querySelector(".bg-shopper-close");
+    const messagesEl = root.querySelector(".bg-shopper-messages");
+    const suggestionsEl = root.querySelector(".bg-shopper-suggestions");
+    const form = root.querySelector(".bg-shopper-input");
+    const input = form.querySelector('input[type="text"]');
+    const fileInput = form.querySelector(".bg-file-input");
+    const uploadBtn = form.querySelector(".bg-upload-btn");
+    const sendBtn = form.querySelector(".bg-btn-send");
+    const imagePreview = root.querySelector(".bg-image-preview");
+    const previewImg = imagePreview.querySelector("img");
+    const removeImageBtn = root.querySelector(".bg-remove-image");
+    const leadGate = root.querySelector("#bg-lead-gate");
+    const leadForm = root.querySelector(".bg-lead-form");
+    const leadError = root.querySelector(".bg-lead-error");
+    const leadSubmit = root.querySelector(".bg-lead-submit");
+
+    let enabled = true;
+    let thinking = false;
+    let pendingImage = null;
+    let settingsLoaded = false;
+    let quizState = { category: null, budget: null };
+    let leadId = null;
+    try {
+      leadId = localStorage.getItem("bg_shopper_lead_id");
+    } catch (_) {
+      leadId = null;
+    }
+
+    function setLeadUnlocked(unlocked) {
+      panel.classList.toggle("bg-chat-locked", !unlocked);
+      if (unlocked) leadGate.classList.add("hidden");
+      else leadGate.classList.remove("hidden");
+    }
+
+    setLeadUnlocked(Boolean(leadId));
+
+    suggestionsEl.querySelectorAll("[data-suggestion]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!leadId) {
+          leadError.textContent = "Please enter your name and email first.";
+          leadError.classList.add("visible");
+          return;
+        }
+        sendMessage(btn.getAttribute("data-suggestion"));
+      });
+    });
+
+    leadForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      leadError.classList.remove("visible");
+      const name = String(leadForm.name.value || "").trim();
+      const email = String(leadForm.email.value || "").trim();
+      if (!name || !email) {
+        leadError.textContent = "Name and email are required.";
+        leadError.classList.add("visible");
+        return;
+      }
+
+      leadSubmit.disabled = true;
+      leadSubmit.textContent = "Saving...";
+
+      try {
+        const res = await fetch(proxyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            intent: "lead",
+            name,
+            email,
+            sessionKey: leadId || undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.leadId) {
+          leadError.textContent = data.error || "Could not save your details.";
+          leadError.classList.add("visible");
+          return;
+        }
+        leadId = data.leadId;
+        try {
+          localStorage.setItem("bg_shopper_lead_id", leadId);
+          localStorage.setItem("bg_shopper_lead_name", data.name || name);
+          localStorage.setItem("bg_shopper_lead_email", data.email || email);
+        } catch (_) {}
+        setLeadUnlocked(true);
+        addMessage(
+          "assistant",
+          data.message || `Thanks ${name}! Ask me anything about our products.`,
+        );
+      } catch (_) {
+        leadError.textContent = "Connection issue. Please try again.";
+        leadError.classList.add("visible");
+      } finally {
+        leadSubmit.disabled = false;
+        leadSubmit.textContent = "Continue to chat";
+      }
+    });
+
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+      thinking = isLoading;
+      sendBtn.disabled = isLoading;
+      sendBtn.classList.toggle("loading", isLoading);
+      input.disabled = isLoading;
+      uploadBtn.disabled = isLoading;
+    }
+
+    function cleanText(text) {
+      return String(text || "")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .replace(/\*([^*]+)\*/g, "$1")
+        .replace(/__([^_]+)__/g, "$1")
+        .replace(/`([^`]+)`/g, "$1")
+        .replace(/[—–•●◆◇★☆]/g, (ch) => (ch === "—" || ch === "–" ? "-" : ""))
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
+
+    function addMessage(role, text, imageSrc) {
+      const bubble = document.createElement("div");
+      bubble.className = `bg-msg ${role}`;
+      if (text) bubble.appendChild(document.createTextNode(cleanText(text)));
+      if (imageSrc) {
+        const img = document.createElement("img");
+        img.src = imageSrc;
+        img.alt = "Uploaded product";
+        bubble.appendChild(img);
+      }
+      messagesEl.appendChild(bubble);
+      scrollToBottom();
+    }
+
+    function showTyping() {
+      const bubble = document.createElement("div");
+      bubble.className = "bg-msg assistant bg-typing-wrap";
+      bubble.innerHTML = '<div class="bg-typing"><span></span><span></span><span></span></div>';
+      messagesEl.appendChild(bubble);
+      scrollToBottom();
+      return bubble;
+    }
+
+    function renderSuggestions(items) {
+      suggestionsEl.innerHTML = "";
+      items.forEach((text) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = text;
+        btn.addEventListener("click", () => {
+          if (!leadId) {
+            leadError.textContent = "Please enter your name and email first.";
+            leadError.classList.add("visible");
+            return;
+          }
+          sendMessage(text);
+        });
+        suggestionsEl.appendChild(btn);
+      });
+    }
+
+    function renderRecommendations(items) {
+      if (!items || !items.length) return;
+      const wrap = document.createElement("div");
+      wrap.className = "bg-reco-list";
+
+      items.slice(0, 3).forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "bg-product-card";
+
+        if (item.imageUrl) {
+          const img = document.createElement("img");
+          try {
+            const u = new URL(String(item.imageUrl), window.location.origin);
+            if (u.protocol === "http:" || u.protocol === "https:") img.src = u.href;
+          } catch (_) {}
+          img.alt = String(item.title || "Product");
+          card.appendChild(img);
+        } else {
+          const ph = document.createElement("div");
+          ph.className = "bg-product-placeholder";
+          card.appendChild(ph);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "bg-product-meta";
+        const link = document.createElement("a");
+        let href = "#";
+        try {
+          const u = new URL(String(item.url || ""), window.location.origin);
+          href =
+            u.protocol === "http:" || u.protocol === "https:" ? u.href : "#";
+        } catch (_) {}
+        link.href = href;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = cleanText(item.title || "Product");
+
+        const price = document.createElement("span");
+        price.className = "bg-product-price";
+        price.textContent = "$" + String(item.price || "");
+
+        const pill = document.createElement("span");
+        pill.className =
+          "bg-stock-pill " + (item.available ? "in" : "out");
+        pill.textContent = item.available ? "In stock" : "Limited";
+
+        const reason = document.createElement("small");
+        reason.textContent = cleanText(item.reason || "Recommended for you");
+
+        meta.appendChild(link);
+        meta.appendChild(price);
+        meta.appendChild(pill);
+        meta.appendChild(reason);
+        card.appendChild(meta);
+
+        const cta = document.createElement("a");
+        cta.className = "bg-product-cta";
+        cta.href = href;
+        cta.target = "_blank";
+        cta.rel = "noopener";
+        cta.textContent = "View";
+        card.appendChild(cta);
+
+        wrap.appendChild(card);
+      });
+
+      messagesEl.appendChild(wrap);
+      scrollToBottom();
+    }
+
+    function clearQuizCards() {
+      root.querySelectorAll(".bg-quiz-card").forEach((el) => el.remove());
+    }
+
+    function renderQuizCard(quiz) {
+      if (!quiz || !quiz.options || !quiz.options.length) return;
+      clearQuizCards();
+
+      const card = document.createElement("div");
+      card.className = "bg-quiz-card";
+
+      const header = document.createElement("div");
+      header.className = "bg-quiz-card-header";
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = cleanText(quiz.title || "Choose an option");
+      const subtitle = document.createElement("span");
+      subtitle.textContent =
+        quiz.step === "category"
+          ? "Based on categories in this store"
+          : "Based on real prices in your selection";
+      titleWrap.appendChild(title);
+      titleWrap.appendChild(subtitle);
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "bg-quiz-close";
+      close.setAttribute("aria-label", "Close");
+      close.textContent = "×";
+      close.addEventListener("click", () => card.remove());
+      header.appendChild(titleWrap);
+      header.appendChild(close);
+
+      const optionsEl = document.createElement("div");
+      optionsEl.className = "bg-quiz-options";
+
+      quiz.options.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bg-quiz-option";
+        const icon = document.createElement("span");
+        icon.className = "bg-quiz-option-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = quiz.step === "budget" ? "$" : "✓";
+        const label = document.createElement("span");
+        label.textContent = cleanText(opt.label || opt.value);
+        btn.appendChild(icon);
+        btn.appendChild(label);
+        btn.addEventListener("click", () => {
+          if (!leadId || thinking) return;
+          if (quiz.step === "category") {
+            quizState.category = opt.value;
+            quizState.budget = null;
+            addMessage("user", opt.label || opt.value);
+            sendQuizStep("budget", opt.value, null, opt.label || opt.value);
+          } else if (quiz.step === "budget") {
+            quizState.budget = opt.value;
+            addMessage("user", opt.label || opt.value);
+            sendQuizStep(
+              "results",
+              quizState.category,
+              opt.value,
+              opt.label || opt.value,
+            );
+          }
+        });
+        optionsEl.appendChild(btn);
+      });
+
+      const footer = document.createElement("div");
+      footer.className = "bg-quiz-footer";
+      const back = document.createElement("button");
+      back.type = "button";
+      back.className = "bg-quiz-nav";
+      back.textContent = "←";
+      back.disabled = quiz.step === "category";
+      back.addEventListener("click", () => {
+        if (quiz.step === "budget") {
+          quizState.budget = null;
+          sendQuizStep("category", null, null, "Change category");
+        }
+      });
+      const dots = document.createElement("div");
+      dots.className = "bg-quiz-dots";
+      const total = Number(quiz.totalPages || 2);
+      for (let i = 1; i <= total; i++) {
+        const dot = document.createElement("span");
+        dot.className =
+          "bg-quiz-dot" + (i === Number(quiz.page || 1) ? " active" : "");
+        dots.appendChild(dot);
+      }
+      const next = document.createElement("button");
+      next.type = "button";
+      next.className = "bg-quiz-nav";
+      next.textContent = "→";
+      next.disabled = true;
+
+      footer.appendChild(back);
+      footer.appendChild(dots);
+      footer.appendChild(next);
+
+      card.appendChild(header);
+      card.appendChild(optionsEl);
+      card.appendChild(footer);
+      panel.insertBefore(card, suggestionsEl);
+      scrollToBottom();
+    }
+
+    async function sendQuizStep(step, category, budget, displayText) {
+      if (thinking || !enabled || !leadId) return;
+      clearQuizCards();
+      suggestionsEl.innerHTML = "";
+      setLoading(true);
+      const typing = showTyping();
+      let data = {};
+
+      try {
+        const res = await fetch(proxyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            question: displayText || "recommend",
+            leadId,
+            quizStep: step,
+            selectedCategory: category,
+            selectedBudget: budget,
+          }),
+        });
+        const raw = await res.text();
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch {
+          data = {};
+        }
+        typing.remove();
+
+        if (data.requireLead) {
+          leadId = null;
+          try {
+            localStorage.removeItem("bg_shopper_lead_id");
+          } catch (_) {}
+          setLeadUnlocked(false);
+          leadError.textContent = data.error || "Please enter your name and email again.";
+          leadError.classList.add("visible");
+          return;
+        }
+
+        if (data.answer) addMessage("assistant", data.answer);
+        if (data.quiz) renderQuizCard(data.quiz);
+        else renderRecommendations(data.recommendations || []);
+        if (Array.isArray(data.suggestions) && data.suggestions.length) {
+          suggestions = data.suggestions;
+        }
+      } catch (_) {
+        typing.remove();
+        addMessage("assistant", "Connection issue. Please try again.");
+      } finally {
+        setLoading(false);
+        if (!data.quiz) {
+          renderSuggestions(suggestions);
+        }
+      }
+    }
+
+    function clearPendingImage() {
+      pendingImage = null;
+      fileInput.value = "";
+      imagePreview.classList.remove("visible");
+      previewImg.removeAttribute("src");
+    }
+
+    function setPendingImage(dataUrl) {
+      pendingImage = dataUrl;
+      previewImg.src = dataUrl;
+      imagePreview.classList.add("visible");
+    }
+
+    async function loadSettings() {
+      if (settingsLoaded) return;
+      settingsLoaded = true;
+
+      try {
+        const res = await fetch(proxyUrl, { method: "GET", headers: { Accept: "application/json" } });
+        const data = await res.json();
+        enabled = Boolean(data.enabled);
+        root.style.display = enabled ? "" : "none";
+        if (!enabled) panel.classList.remove("open");
+        const welcome =
+          data.welcomeMessage ||
+          "Hi! I can help you find products and check what's in stock.";
+        const firstMsg = messagesEl.querySelector(".bg-msg.assistant");
+        if (firstMsg) {
+          if (data.productCount > 0) {
+            const labels = (data.collections?.length
+              ? data.collections
+              : data.categories || []
+            )
+              .slice(0, 4)
+              .map((item) => item.name)
+              .filter(Boolean);
+            const categoryText = labels.length
+              ? ` We currently have ${data.productCount} products` +
+                (labels.length
+                  ? ` in categories like ${labels.join(", ")}.`
+                  : ".")
+              : ` We currently have ${data.productCount} products in our catalog.`;
+            firstMsg.textContent = cleanText(welcome + categoryText);
+          } else {
+            firstMsg.textContent = cleanText(welcome);
+          }
+        }
+        if (Array.isArray(data.suggestions) && data.suggestions.length) {
+          suggestions = data.suggestions;
+          renderSuggestions(suggestions);
+        }
+      } catch {
+        enabled = false;
+        root.style.display = "none";
+      }
+    }
+
+    async function sendMessage(text) {
+      const question = String(text || "").trim();
+      if ((!question && !pendingImage) || thinking || !enabled) return;
+
+      if (!leadId) {
+        leadError.textContent = "Please enter your name and email first.";
+        leadError.classList.add("visible");
+        setLeadUnlocked(false);
+        return;
+      }
+
+      const imageToSend = pendingImage;
+      addMessage("user", question || "Find products like this", imageToSend);
+      input.value = "";
+      clearPendingImage();
+      clearQuizCards();
+      suggestionsEl.innerHTML = "";
+      setLoading(true);
+
+      const typing = showTyping();
+      let data = {};
+
+      try {
+        const res = await fetch(proxyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ question, image: imageToSend, leadId }),
+        });
+        const raw = await res.text();
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch {
+          data = {};
+        }
+        typing.remove();
+
+        if (data.requireLead) {
+          leadId = null;
+          try {
+            localStorage.removeItem("bg_shopper_lead_id");
+          } catch (_) {}
+          setLeadUnlocked(false);
+          leadError.textContent = data.error || "Please enter your name and email again.";
+          leadError.classList.add("visible");
+          return;
+        }
+
+        if (data.answer) {
+          addMessage("assistant", data.answer);
+          if (data.quiz) renderQuizCard(data.quiz);
+          else renderRecommendations(data.recommendations || []);
+        } else if (data.error) {
+          addMessage("assistant", data.error);
+        } else {
+          addMessage(
+            "assistant",
+            "I couldn't load product results right now. Please try again.",
+          );
+        }
+      } catch {
+        typing.remove();
+        addMessage(
+          "assistant",
+          "Connection issue. Please refresh the page and try again.",
+        );
+      } finally {
+        setLoading(false);
+        if (!data?.quiz) {
+          renderSuggestions(
+            Array.isArray(data?.suggestions) && data.suggestions.length
+              ? data.suggestions
+              : suggestions,
+          );
+        }
+      }
+    }
+
+    uploadBtn.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        addMessage("assistant", "Please upload an image under 5 MB.");
+        fileInput.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => setPendingImage(String(reader.result));
+      reader.readAsDataURL(file);
+    });
+
+    function setPanelOpen(isOpen) {
+      panel.classList.toggle("open", isOpen);
+      launcherWrap.classList.toggle("is-open", isOpen);
+      launcher.setAttribute("aria-expanded", String(isOpen));
+      launcher.setAttribute(
+        "aria-label",
+        isOpen ? "Close shopping assistant" : "Open shopping assistant",
+      );
+    }
+
+    function togglePanel() {
+      const willOpen = !panel.classList.contains("open");
+      setPanelOpen(willOpen);
+      if (willOpen) loadSettings();
+    }
+
+    removeImageBtn.addEventListener("click", clearPendingImage);
+
+    launcher.addEventListener("click", togglePanel);
+
+    closeBtn.addEventListener("click", () => setPanelOpen(false));
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendMessage(input.value);
+    });
+
+    // Fail-closed: hide widget until settings confirm enabled
+    root.style.display = "none";
+    loadSettings();
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Shopper Assistant",
+  "target": "body",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows a floating AI shopping assistant on your storefront. Customers can ask for products, upload photos, and get recommendations."
+    }
+  ]
+}
+{% endschema %}

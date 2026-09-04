@@ -1,0 +1,34 @@
+query BundleGuardVariantInventory($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on ProductVariant {
+      id
+      title
+      sku
+      inventoryPolicy
+      inventoryQuantity
+      product {
+        id
+        title
+      }
+      inventoryItem {
+        id
+        tracked
+        sku
+        inventoryLevels(first: 50) {
+          nodes {
+            quantities(names: ["available", "on_hand", "committed", "reserved"]) {
+              name
+              quantity
+            }
+            location {
+              id
+              name
+              isActive
+              fulfillsOnlineOrders
+            }
+          }
+        }
+      }
+    }
+  }
+}
