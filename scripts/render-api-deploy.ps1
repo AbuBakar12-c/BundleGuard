@@ -159,16 +159,19 @@ if (-not $existing) {
     ownerId = $ownerId
     repo    = $repo
     branch  = "main"
-    runtime = "docker"
-    plan    = "starter"
-    region  = "oregon"
-    dockerfilePath = "./Dockerfile"
-    dockerContext  = "."
-    healthCheckPath = "/readyz"
     autoDeploy = "yes"
     envVars = $envList
+    serviceDetails = @{
+      runtime = "docker"
+      plan    = "starter"
+      region  = "oregon"
+      healthCheckPath = "/readyz"
+      envSpecificDetails = @{
+        dockerfilePath = "./Dockerfile"
+        dockerContext  = "."
+      }
+    }
   }
-  # Prefer linking DB if API supports fromDatabase-style - connection string is enough
   $created = Invoke-Render POST "/services" $svcBody
   $svc = if ($created.service) { $created.service } else { $created }
   Write-Host ("Created service: " + $svc.id)
