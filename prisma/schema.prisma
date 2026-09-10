@@ -109,16 +109,19 @@ model ShopAssistantSettings {
 }
 
 model ShopperLead {
-  id          String             @id @default(cuid())
-  shop        String
-  name        String
-  email       String
-  status      String             @default("captured")
-  source      String             @default("shopper_chat")
-  sessionKey  String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  messages    BuyerChatMessage[]
+  id              String             @id @default(cuid())
+  shop            String
+  name            String
+  email           String
+  status          String             @default("captured")
+  source          String             @default("shopper_chat")
+  sessionKey      String?
+  /// Style keywords from the shopper's profile photo (not the raw image).
+  styleKeywords   String?
+  hasProfileImage Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  messages        BuyerChatMessage[]
 
   @@index([shop, createdAt])
   @@index([shop, status])

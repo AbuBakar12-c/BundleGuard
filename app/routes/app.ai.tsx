@@ -61,8 +61,10 @@ export default function AiHubPage() {
       </s-link>
 
       <s-paragraph>
-        Two assistants in one place: merchant inventory help inside Admin, and
-        storefront Shopper AI for buyers.
+        <s-text type="strong">Merchant AI</s-text> = inventory help inside Admin
+        (Growth+). <s-text type="strong">Shopper AI</s-text> = storefront chat for
+        buyers (Pro + theme embed). These are separate from bundle health on the
+        Dashboard.
       </s-paragraph>
 
       {catalogError && (

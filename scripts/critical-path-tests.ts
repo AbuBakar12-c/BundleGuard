@@ -19,6 +19,10 @@ import {
   filterCatalogByCategory,
 } from "../app/services/recommend-quiz.server";
 import type { StoreCatalog } from "../app/services/catalog.server";
+import {
+  detectBuyerIntent,
+  isGreetingOrSmallTalk,
+} from "../app/services/assistant-prompts.server";
 
 let passed = 0;
 function check(name: string, fn: () => void) {
@@ -145,6 +149,14 @@ check("recommend quiz options come only from catalog categories", () => {
   const budgets = buildBudgetOptionsFromProducts(winter);
   assert.ok(budgets.length >= 1);
   assert.ok(budgets.every((b) => !/electronics/i.test(b.label)));
+});
+
+check("greetings are not treated as product search", () => {
+  assert.equal(isGreetingOrSmallTalk("hi how ae you"), true);
+  assert.equal(detectBuyerIntent("hi how ae you"), "greeting");
+  assert.equal(detectBuyerIntent("hello"), "greeting");
+  assert.equal(detectBuyerIntent("Help me choose"), "catalog");
+  assert.equal(detectBuyerIntent("products under $50"), "budget");
 });
 
 console.log(`\n${passed} critical-path checks passed`);

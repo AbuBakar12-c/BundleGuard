@@ -417,19 +417,12 @@ export function buildStoreCatalogInsights(
         }
       : null;
 
-  const labelPool =
-    collections.length > 0
-      ? collections.map((c) => c.name)
-      : categories.map((c) => c.name);
-
   const suggestions: string[] = [];
   if (catalog.productCount === 0) {
     suggestions.push("What products do you sell?");
   } else {
     suggestions.push("Help me choose ✨");
-    for (const label of labelPool.slice(0, 2)) {
-      suggestions.push(`Show ${label}`);
-    }
+    suggestions.push("What's in stock?");
     if (priceRange) {
       const mid = Math.max(
         1,
@@ -437,7 +430,6 @@ export function buildStoreCatalogInsights(
       );
       suggestions.push(`Under $${mid}`);
     }
-    suggestions.push("What's in stock?");
   }
 
   return {

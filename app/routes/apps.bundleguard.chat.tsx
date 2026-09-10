@@ -26,6 +26,10 @@ import {
 const MAX_QUESTION_LEN = 800;
 const MAX_CATEGORY_LEN = 120;
 
+function isValidImageDataUrl(image: string) {
+  return /^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(image);
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const context = await authenticate.public.appProxy(request);
@@ -306,21 +310,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (!question && !image && !isQuizContinue && quizStep !== "category") {
       return publicJson(
-        { error: "empty_message", message: "Please enter a message or upload a product image." },
+        {
+          error: "empty_message",
+          message: "Please enter a message or upload a product image.",
+        },
         { status: 400 },
       );
     }
 
     if (image) {
-      if (!/^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(image)) {
+      if (!isValidImageDataUrl(image)) {
         return publicJson(
-          { error: "invalid_image", message: "Only JPEG, PNG, WebP, or GIF uploads are supported." },
+          {
+            error: "invalid_image",
+            message: "Only JPEG, PNG, WebP, or GIF uploads are supported.",
+          },
           { status: 400 },
         );
       }
       if (image.length > 7_000_000) {
         return publicJson(
-          { error: "image_too_large", message: "Please upload an image under 5 MB." },
+          {
+            error: "image_too_large",
+            message: "Please upload an image under 5 MB.",
+          },
           { status: 400 },
         );
       }

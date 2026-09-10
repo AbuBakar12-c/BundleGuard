@@ -2,13 +2,15 @@
 
 ## Final status
 
-**NOT YET PRODUCTION READY** (host + Partner URL deploy still required)
+**CODE READY · NOT APP-STORE LIVE** (updated Sep 10, 2026)
 
-Code + Railway packaging are ready. Remaining: interactive `railway login`,
+See `docs/production-readiness.md` for the current scorecard.
+
+Code + Render packaging are ready. Remaining ops: host payment method,
 public HTTPS URL, `shopify app deploy`, live smoke.
 
-Host path: **Railway** + managed Postgres (see `docs/railway-deploy.md`).
-Vercel is out of scope (serverless rewrite). Fly remains an alternate if billed.
+Host path: **Render** primary (`docs/render-deploy.md`); Railway/Fly optional.
+Vercel is out of scope (serverless rewrite).
 
 ---
 

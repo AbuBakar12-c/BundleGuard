@@ -67,6 +67,7 @@ export function detectMerchantIntent(question: string) {
 export function isVagueBuyerQuery(question: string) {
   const q = question.toLowerCase().trim();
   if (!q) return true;
+  if (isGreetingOrSmallTalk(question)) return false;
   return (
     /^(best(\s+product)?|recommend(ation)?s?|help me choose|what should i buy|something good|suggest something|any suggestions?)$/.test(
       q,
@@ -80,8 +81,37 @@ export function isVagueBuyerQuery(question: string) {
   );
 }
 
+/** Hi / how are you / thanks — not product shopping yet. */
+export function isGreetingOrSmallTalk(question: string) {
+  const q = question.toLowerCase().trim();
+  if (!q || q.length > 80) return false;
+  if (
+    /^(hi|hello|hey|yo|sup|hola)([\s,!.?]|$)/.test(q) &&
+    !/(product|buy|show|recommend|stock|price|under|\$)/.test(q)
+  ) {
+    return true;
+  }
+  if (
+    /^(good\s*)?(morning|afternoon|evening)([\s,!.?]|$)/.test(q) &&
+    !/(product|buy|show|recommend)/.test(q)
+  ) {
+    return true;
+  }
+  if (
+    /\b(how\s*(are|r|is|ae|a)\s*(you|u|ya)|how'?s\s*it\s*going|what'?s\s*up|hru)\b/.test(
+      q,
+    )
+  ) {
+    return true;
+  }
+  if (/^(thanks|thank you|thx|ty)([\s,!.?]|$)/.test(q)) return true;
+  if (/^(ok|okay|cool|nice|great|awesome|got it)\.?$/.test(q)) return true;
+  return false;
+}
+
 export function detectBuyerIntent(question: string) {
   const q = question.toLowerCase();
+  if (isGreetingOrSmallTalk(question)) return "greeting";
   if (isVagueBuyerQuery(question)) return "catalog";
   if (
     /(what.*(product|sell|offer)|your products|show.*(product|all)|catalog|know about|tell me about|list.*(product|item)|any products)/.test(
@@ -96,6 +126,5 @@ export function detectBuyerIntent(question: string) {
   if (/(recommend|similar|like this|match)/.test(q)) return "recommend";
   if (/(in stock|available|ready)/.test(q)) return "in_stock";
   if (/(under|below|budget|cheap|affordable|\$)/.test(q)) return "budget";
-  if (/(hello|hi|hey)\b/.test(q) && q.length < 40) return "greeting";
   return "search";
 }

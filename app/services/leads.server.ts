@@ -134,3 +134,30 @@ export async function updateLeadStatus(
     data: { status },
   });
 }
+
+/** Store style keywords from a profile photo (never persist the raw image). */
+export async function updateLeadStyleProfile(
+  shop: string,
+  leadId: string,
+  styleKeywords: string,
+) {
+  const lead = await getLeadById(shop, leadId);
+  if (!lead) return null;
+  const cleaned = styleKeywords.replace(/\s+/g, " ").trim().slice(0, 500);
+  return prisma.shopperLead.update({
+    where: { id: lead.id },
+    data: {
+      styleKeywords: cleaned || null,
+      hasProfileImage: Boolean(cleaned),
+    },
+  });
+}
+
+export async function clearLeadStyleProfile(shop: string, leadId: string) {
+  const lead = await getLeadById(shop, leadId);
+  if (!lead) return null;
+  return prisma.shopperLead.update({
+    where: { id: lead.id },
+    data: { styleKeywords: null, hasProfileImage: false },
+  });
+}

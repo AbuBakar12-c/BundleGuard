@@ -148,6 +148,12 @@ export default function NewBundle() {
         Dashboard
       </s-link>
 
+      <s-banner heading="This creates a store product" tone="info">
+        BundleGuard creates an Active Shopify product (kit) from the components
+        you pick. It can appear on your Online Store like any product. After
+        that, this app monitors component inventory health for that kit.
+      </s-banner>
+
       {actionData?.error && (
         <s-banner tone="critical" heading="Could not create bundle">
           {actionData.error}

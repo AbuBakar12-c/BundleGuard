@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
     >
       <h1>BundleGuard Privacy Policy</h1>
       <p>
-        <em>Last updated: September 4, 2026</em>
+        <em>Last updated: September 10, 2026</em>
       </p>
 
       <h2>Who we are</h2>

@@ -756,9 +756,8 @@
 
     const proxyUrl = root.dataset.proxyUrl || "/apps/bundleguard/chat";
     let suggestions = [
-      "Show me best sellers",
-      "Find products under $50",
-      "What's in stock today?",
+      "Help me choose ✨",
+      "What's in stock?",
     ];
 
     root.innerHTML = `
@@ -797,7 +796,7 @@
         </div>
         <div class="bg-lead-gate" id="bg-lead-gate">
           <h3>Before we start</h3>
-          <p>Share your name and email so we can help you (same as our assessment form).</p>
+          <p>Share your name and email so we can help you.</p>
           <form class="bg-lead-form">
             <label for="bg-lead-name">Full name</label>
             <input id="bg-lead-name" name="name" type="text" autocomplete="name" placeholder="Jane Doe" required />
@@ -808,12 +807,11 @@
           </form>
         </div>
         <div class="bg-shopper-messages">
-          <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock.</div>
+          <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.</div>
         </div>
         <div class="bg-shopper-suggestions">
-          <button type="button" data-suggestion="Show me best sellers">Show me best sellers</button>
-          <button type="button" data-suggestion="Find products under $50">Find products under $50</button>
-          <button type="button" data-suggestion="What's in stock today?">What's in stock today?</button>
+          <button type="button" data-suggestion="Help me choose ✨">Help me choose ✨</button>
+          <button type="button" data-suggestion="What's in stock?">What's in stock?</button>
         </div>
         <div class="bg-image-preview">
           <div class="bg-image-preview-inner">
@@ -933,6 +931,8 @@
           localStorage.setItem("bg_shopper_lead_id", leadId);
           localStorage.setItem("bg_shopper_lead_name", data.name || name);
           localStorage.setItem("bg_shopper_lead_email", data.email || email);
+          localStorage.removeItem("bg_shopper_has_profile");
+          localStorage.removeItem("bg_shopper_profile_preview");
         } catch (_) {}
         setLeadUnlocked(true);
         addMessage(
@@ -1271,27 +1271,10 @@
         if (!enabled) panel.classList.remove("open");
         const welcome =
           data.welcomeMessage ||
-          "Hi! I can help you find products and check what's in stock.";
+          "Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.";
         const firstMsg = messagesEl.querySelector(".bg-msg.assistant");
         if (firstMsg) {
-          if (data.productCount > 0) {
-            const labels = (data.collections?.length
-              ? data.collections
-              : data.categories || []
-            )
-              .slice(0, 4)
-              .map((item) => item.name)
-              .filter(Boolean);
-            const categoryText = labels.length
-              ? ` We currently have ${data.productCount} products` +
-                (labels.length
-                  ? ` in categories like ${labels.join(", ")}.`
-                  : ".")
-              : ` We currently have ${data.productCount} products in our catalog.`;
-            firstMsg.textContent = cleanText(welcome + categoryText);
-          } else {
-            firstMsg.textContent = cleanText(welcome);
-          }
+          firstMsg.textContent = cleanText(welcome);
         }
         if (Array.isArray(data.suggestions) && data.suggestions.length) {
           suggestions = data.suggestions;
@@ -1395,6 +1378,8 @@
       reader.readAsDataURL(file);
     });
 
+    removeImageBtn.addEventListener("click", clearPendingImage);
+
     function setPanelOpen(isOpen) {
       panel.classList.toggle("open", isOpen);
       launcherWrap.classList.toggle("is-open", isOpen);
@@ -1410,8 +1395,6 @@
       setPanelOpen(willOpen);
       if (willOpen) loadSettings();
     }
-
-    removeImageBtn.addEventListener("click", clearPendingImage);
 
     launcher.addEventListener("click", togglePanel);
 

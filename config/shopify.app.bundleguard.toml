@@ -1,10 +1,10 @@
-# Alternate Partner app config — KEEP IN SYNC with shopify.app.toml for scopes/webhooks/proxy.
-# Prefer linking/deploying shopify.app.toml unless this client_id is intentionally used.
-# Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
+# Alternate Partner app config — DO NOT deploy unless this client_id is intentional.
+# Prefer shopify.app.toml (client_id must match .env SHOPIFY_API_KEY).
+# Placeholders only — never example.com.
 
 client_id = "8742cf27d80a54b601ca11a0e03acfa5"
 name = "BundleGuard"
-application_url = "https://example.com"
+application_url = "https://REPLACE_WITH_PRODUCTION_HOST"
 embedded = true
 
 [build]
@@ -40,9 +40,9 @@ scopes = "read_products,write_products,read_inventory,read_locations,read_orders
 
 [auth]
 redirect_urls = [
-  "https://example.com/auth/callback",
-  "https://example.com/auth/shopify/callback",
-  "https://example.com/api/auth/callback",
+  "https://REPLACE_WITH_PRODUCTION_HOST/auth/callback",
+  "https://REPLACE_WITH_PRODUCTION_HOST/auth/shopify/callback",
+  "https://REPLACE_WITH_PRODUCTION_HOST/api/auth/callback",
 ]
 
 [app_proxy]

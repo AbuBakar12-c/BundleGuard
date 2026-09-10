@@ -31,12 +31,26 @@ if (!apiSecretKey) {
   );
 }
 
+const appUrl = (process.env.SHOPIFY_APP_URL || "").trim();
+if (!appUrl) {
+  // Shopify library hard-fails on empty appUrl. Locally the tunnel is injected by
+  // `shopify app dev` / `npm run dev` — never put example.com back in .env.
+  throw new Error(
+    "SHOPIFY_APP_URL is empty. For local development run `npm run dev` (Shopify CLI sets the Cloudflare tunnel URL). For production set SHOPIFY_APP_URL to your real https:// host (Render/Railway) — never example.com.",
+  );
+}
+if (/example\.com/i.test(appUrl)) {
+  throw new Error(
+    "SHOPIFY_APP_URL must not be example.com (causes Example Domain). Clear it for `npm run dev`, or set your real production HTTPS URL.",
+  );
+}
+
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey,
   apiVersion: ApiVersion.October25,
   scopes: process.env.SCOPES?.split(","),
-  appUrl: process.env.SHOPIFY_APP_URL || "",
+  appUrl,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,

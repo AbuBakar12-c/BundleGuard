@@ -121,6 +121,14 @@ function formatStoreCategoryLine(insights: StoreCatalogInsights) {
   return `We currently sell: ${labels.slice(0, 5).join(", ")}.`;
 }
 
+function softChatSuggestions(insights: StoreCatalogInsights) {
+  const items = ["Help me choose ✨", "What's in stock?"];
+  const label =
+    insights.collections[0]?.name || insights.categories[0]?.name || null;
+  if (label) items.push(`Show ${label}`);
+  return [...new Set(items)].slice(0, 4);
+}
+
 function deterministicAnswer(
   intent: string,
   shopName: string,
@@ -138,13 +146,7 @@ function deterministicAnswer(
 
   if (intent === "greeting") {
     return cleanShopperText(
-      [
-        `Welcome to ${shopName}! ✨ I found ${totalCount} active product${totalCount === 1 ? "" : "s"} in our catalog.`,
-        categoryLine,
-        "Tell me what you need, or tap a suggestion below.",
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
+      `Hey! I'm doing great — thanks for asking. ✨ I'm here whenever you want help finding something in our store. What are you shopping for today?`,
     );
   }
 
@@ -239,14 +241,14 @@ async function describeProductImage(imageDataUrl: string) {
     const completion = await client.chat.completions.create({
       model: MODEL,
       temperature: 0.1,
-      max_tokens: 60,
+      max_tokens: 80,
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Extract product search keywords only: type, color, material, style, category. Max 12 words. No sentences.",
+              text: "This is a product photo. Extract search keywords to find the same product or close alternatives in a store catalog: product type, color, material, brand cues, style, category. Max 16 words. Keywords only, no sentences.",
             },
             { type: "image_url", image_url: { url: imageDataUrl } },
           ],
@@ -283,12 +285,14 @@ export async function answerBuyerQuestion(options: {
   }
 
   const userLog = imageDataUrl
-    ? `[Image] ${question || "Find this product"}`
+    ? `[Product image] ${question || "Find similar products"}`
     : question;
   await saveBuyerMessage(shop, "user", userLog, leadId);
 
   const vagueQuery = isVagueBuyerQuery(question);
-  const intent = detectBuyerIntent(question || "catalog");
+  const intent = imageDataUrl
+    ? "recommend"
+    : detectBuyerIntent(question || "catalog");
   const budgetMax = extractBudgetMax(question);
   const quizStep = options.quizStep ?? null;
   const selectedCategory = options.selectedCategory ?? null;
@@ -337,7 +341,7 @@ export async function answerBuyerQuestion(options: {
         answer,
         recommendations: [] as ProductRecommendation[],
         quiz: null,
-        suggestions: insights.suggestions,
+        suggestions: softChatSuggestions(insights),
       };
     }
 
@@ -350,7 +354,7 @@ export async function answerBuyerQuestion(options: {
       answer,
       recommendations: [] as ProductRecommendation[],
       quiz,
-      suggestions: insights.suggestions,
+      suggestions: softChatSuggestions(insights),
     };
   }
 
@@ -366,7 +370,7 @@ export async function answerBuyerQuestion(options: {
       answer,
       recommendations: [] as ProductRecommendation[],
       quiz,
-      suggestions: insights.suggestions,
+      suggestions: softChatSuggestions(insights),
     };
   }
 
@@ -397,11 +401,12 @@ export async function answerBuyerQuestion(options: {
       answer,
       recommendations,
       quiz: null,
-      suggestions: insights.suggestions,
+      suggestions: softChatSuggestions(insights),
     };
   }
 
-  if (intent === "greeting" && !searchText.trim()) {
+  // Greetings / small talk — never dump catalog or product cards
+  if (intent === "greeting" && !imageDataUrl) {
     const answer = deterministicAnswer(
       "greeting",
       catalog.shopName,
@@ -414,35 +419,46 @@ export async function answerBuyerQuestion(options: {
       answer,
       recommendations: [] as ProductRecommendation[],
       quiz: null,
-      suggestions: insights.suggestions,
+      suggestions: softChatSuggestions(insights),
     };
   }
 
   // 2) Match against complete catalog (no missing products from truncated search)
   const matched =
-    vagueQuery ||
-    intent === "catalog" ||
-    intent === "bestsellers" ||
-    intent === "in_stock"
-      ? matchProductsFromCatalog(catalog, "", {
+    imageDataUrl
+      ? matchProductsFromCatalog(catalog, searchText || question, {
           budgetMax,
           limit: 8,
         })
-      : matchProductsFromCatalog(catalog, searchText || question, {
-          budgetMax,
-          limit: 8,
-        });
+      : vagueQuery ||
+          intent === "catalog" ||
+          intent === "bestsellers" ||
+          intent === "in_stock"
+        ? matchProductsFromCatalog(catalog, "", {
+            budgetMax,
+            limit: 8,
+          })
+        : matchProductsFromCatalog(catalog, searchText || question, {
+            budgetMax,
+            limit: 8,
+          });
 
   // If keyword match empty, still show top available catalog items for browse-like asks
   const picks =
     matched.length > 0
       ? matched
-      : matchProductsFromCatalog(catalog, "", { limit: 6 });
+      : imageDataUrl || intent === "search"
+        ? matched
+        : matchProductsFromCatalog(catalog, "", { limit: 6 });
 
   const recommendations = picks.slice(0, 3).map((p) =>
     toRecommendation(
       p,
-      p.available ? "Live catalog match" : "From catalog (limited stock)",
+      imageDataUrl
+        ? "Similar to your photo"
+        : p.available
+          ? "Live catalog match"
+          : "From catalog (limited stock)",
     ),
   );
 
@@ -467,16 +483,25 @@ export async function answerBuyerQuestion(options: {
     ].slice(0, 20),
   };
 
-  let answer = deterministicAnswer(
-    vagueQuery && intent === "search" ? "catalog" : intent,
-    catalog.shopName,
-    picks,
-    catalog.productCount,
-    insights,
-  );
+  let answer =
+    imageDataUrl && picks.length > 0
+      ? cleanShopperText(
+          "I analyzed your product photo and found the closest matches in our catalog. Same type first, then close alternatives:",
+        )
+      : imageDataUrl && picks.length === 0
+        ? cleanShopperText(
+            "I analyzed your photo, but I couldn't find a close product match in this store's catalog. Try another angle, or tell me the product type you're looking for.",
+          )
+        : deterministicAnswer(
+            vagueQuery && intent === "search" ? "catalog" : intent,
+            catalog.shopName,
+            picks,
+            catalog.productCount,
+            insights,
+          );
 
   const client = getOpenAiClient();
-  if (client && !vagueQuery) {
+  if (client && (!vagueQuery || imageDataUrl)) {
     try {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
@@ -506,7 +531,7 @@ export async function answerBuyerQuestion(options: {
           content: [
             {
               type: "text",
-              text: `Shopper message: ${question || "Find products like this image"}\nIntent: ${intent}\nBudget max: ${budgetMax ?? "none"}`,
+              text: `Shopper uploaded a product photo. Recommend the same product or close alternatives from CATALOG_MATCHES only.\nShopper message: ${question || "Find products like this"}\nVision keywords: ${searchText}\nBudget max: ${budgetMax ?? "none"}`,
             },
             { type: "image_url", image_url: { url: imageDataUrl } },
           ],
@@ -539,9 +564,13 @@ export async function answerBuyerQuestion(options: {
   return {
     answer: cleanShopperText(answer),
     recommendations:
-      inStock.length > 0 ? inStock.slice(0, 3) : recommendations.slice(0, 3),
+      picks.length === 0
+        ? []
+        : inStock.length > 0
+          ? inStock.slice(0, 3)
+          : recommendations.slice(0, 3),
     quiz: null as RecommendQuizCard | null,
-    suggestions: insights.suggestions,
+    suggestions: softChatSuggestions(insights),
   };
 }
 

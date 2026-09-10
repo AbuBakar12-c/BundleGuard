@@ -107,7 +107,7 @@ export default function Dashboard() {
   const pct = healthPercent(summary.healthy, summary.total);
 
   return (
-    <s-page heading="Bundle Health Dashboard">
+    <s-page heading="Dashboard">
       <s-button slot="primary-action" href="/app/bundles/new" variant="primary">
         Create bundle
       </s-button>
@@ -121,6 +121,13 @@ export default function Dashboard() {
       >
         Resync all
       </s-button>
+
+      <s-banner heading="How BundleGuard works" tone="info">
+        Creating a bundle makes a real Shopify product (kit) that can appear on
+        your Online Store. BundleGuard then tracks whether that kit can still be
+        sold from component inventory. Health scores live in this app — they are
+        not the same as the theme “availability” badge.
+      </s-banner>
 
       {/* ── Blocked location alerts ── */}
       {alerts.length > 0 && (
@@ -212,9 +219,10 @@ export default function Dashboard() {
             <s-stack direction="block" gap="base">
               <s-heading>No bundles yet</s-heading>
               <s-paragraph>
-                Create your first bundle to start tracking component inventory,
-                auditing OOS policies, and preventing overselling. BundleGuard
-                monitors real-time stock levels across all your warehouses.
+                Create a bundle to add a sellable kit product in Shopify and
+                start tracking component stock (healthy / warning / blocked).
+                After create, check Products in Admin and your Online Store
+                channel if you want it visible to customers.
               </s-paragraph>
               <s-stack direction="inline" gap="base">
                 <s-button href="/app/bundles/new" variant="primary">
