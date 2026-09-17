@@ -2,7 +2,7 @@
 # Mirrors docker-start: migrate/setup then serve.
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "openssl"]
+nixPkgs = ["nodejs_22", "openssl"]
 
 [phases.install]
 cmds = ["npm ci"]

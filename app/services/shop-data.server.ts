@@ -2,6 +2,7 @@
  * Shop-scoped data lifecycle for uninstall + GDPR compliance webhooks.
  */
 
+import { Prisma } from "@prisma/client";
 import prisma from "../db.server";
 
 export async function purgeShopData(shop: string) {
@@ -138,8 +139,18 @@ export async function claimWebhookDelivery(options: {
       },
     });
     return true;
-  } catch {
-    // Unique constraint → already processed
-    return false;
+  } catch (error) {
+    // P2002 = unique constraint on [shop, topic, webhookId] → genuinely a
+    // duplicate delivery, safe to skip. Anything else (e.g. a transient DB
+    // outage) must NOT be treated as "already processed" — that would
+    // silently drop the webhook's work forever instead of letting it
+    // propagate so Shopify retries once the DB is healthy again.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return false;
+    }
+    throw error;
   }
 }

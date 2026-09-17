@@ -8,6 +8,7 @@ import { Form, redirect, useActionData, useNavigation } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate, isTestCharge } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { safeActionError } from "../services/http.server";
 import { createBundle, getBundlesForShop } from "../services/bundles.server";
 import {
   STARTER_PLAN,
@@ -93,9 +94,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     return redirect(`/app/bundles/${result.bundle?.id}`);
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Failed to create bundle",
-    };
+    return safeActionError("bundles.create", error);
   }
 };
 

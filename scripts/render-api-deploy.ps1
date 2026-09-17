@@ -129,9 +129,9 @@ try {
 }
 
 $shopifyAppUrl = Pick "SHOPIFY_APP_URL"
-if (-not $shopifyAppUrl -or $shopifyAppUrl -match "bundleguard.onrender.com") {
-  # Will update after service URL is known
-  $shopifyAppUrl = "https://bundleguard.onrender.com"
+if (-not $shopifyAppUrl -or $shopifyAppUrl -match "bundleguard\.onrender\.com$") {
+  # Canonical live service host (must match shopify.app.toml)
+  $shopifyAppUrl = "https://bundleguard-24n6.onrender.com"
 }
 
 $envList = @(

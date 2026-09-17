@@ -9,10 +9,20 @@ import {
 const MAX_HISTORY = 16;
 const MODEL = "gpt-4o-mini";
 
+// Bound every OpenAI call to what a synchronous admin chat request can
+// tolerate — the SDK default (10 min timeout, 2 retries) can otherwise hold
+// a merchant's request open far longer than any browser/proxy will wait.
+const OPENAI_TIMEOUT_MS = 20_000;
+const OPENAI_MAX_RETRIES = 1;
+
 function getClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set in .env");
-  return new OpenAI({ apiKey });
+  return new OpenAI({
+    apiKey,
+    timeout: OPENAI_TIMEOUT_MS,
+    maxRetries: OPENAI_MAX_RETRIES,
+  });
 }
 
 async function buildStoreContext(shop: string, intent: string) {

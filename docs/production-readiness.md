@@ -1,15 +1,15 @@
 # BundleGuard — production / App Store readiness (updated Sep 10, 2026)
 
-## Verdict
+## Verdict (updated Sep 11, 2026)
 
 | Area | Status |
 |------|--------|
-| **Code / MVP** | ~95% — hardened for production |
-| **Local product** | Ready (`npm run dev`) |
-| **Production host** | **Blocked** — needs Render (or Railway) card + HTTPS URL |
-| **App Store submit** | **Not ready** until host + Partner deploy + listing assets |
+| **Code / MVP** | ~92% — production-hardened |
+| **Production host** | **Live** — `https://bundleguard-24n6.onrender.com` (`/readyz` OK) |
+| **Billing / Plan** | **Blocked** until Dev Dashboard **Distribution = Public** |
+| **App Store submit** | **Not ready** until Public + screenshots + listing privacy URL |
 
-The Sep 4 “4 critical risks” are largely **fixed in code**. What remains is **ops**: live HTTPS + `shopify app deploy`.
+Sep 4’s four code risks are fixed. Remaining blockers are **Partner ops**, not missing features.
 
 ---
 
@@ -17,11 +17,11 @@ The Sep 4 “4 critical risks” are largely **fixed in code**. What remains is 
 
 | # | Then | Now |
 |---|------|-----|
-| 1 | `example.com` URLs | **Fixed locally** (`.env` clear; CLI tunnel). Canonical TOML uses `REPLACE_WITH_PRODUCTION_HOST` (safe placeholder). Alternate config no longer uses `example.com`. |
-| 2 | No Fly deploy | **Superseded** by Render Blueprint (`render.yaml`) + Railway/Fly still optional. Deploy blocked only by host billing. |
-| 3 | SQLite default | **Correct for local**. Production Docker/`render.yaml` → Postgres. Boot fails if prod uses `file:`. |
-| 4 | Shopper proxy not Pro-gated | **Fixed** — loader + action use `resolveEntitlementsFromAdmin` / `assertFeatureOrThrow` (402). |
-| — | Partner billing ownership | Confirmed in `production.inputs.env` (`PARTNER_OWNED_APP=true`). Live charges need Partner org + `SHOPIFY_BILLING_TEST=false` on host. |
+| 1 | `example.com` URLs | **Fixed** — `shopify.app.toml` → Render `-24n6` host + redirects |
+| 2 | No Fly deploy | **Fixed** — Render Docker service live (Fly optional) |
+| 3 | SQLite default | **Fixed for prod** — Docker switches Postgres; boot rejects `file:` |
+| 4 | Shopper proxy not Pro-gated | **Fixed** — loader + action 402 without Pro |
+| — | Partner billing ownership | **OPEN** — must Choose distribution → **Public** before Billing API charges |
 
 ---
 

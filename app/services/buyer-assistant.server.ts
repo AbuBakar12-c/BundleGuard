@@ -42,10 +42,20 @@ export interface ProductRecommendation {
   reason: string;
 }
 
+// Bound every OpenAI call to what a synchronous storefront chat request can
+// tolerate — the SDK default (10 min timeout, 2 retries) can otherwise hold
+// a shopper's request open far longer than any browser/proxy will wait.
+const OPENAI_TIMEOUT_MS = 20_000;
+const OPENAI_MAX_RETRIES = 1;
+
 function getOpenAiClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
-  return new OpenAI({ apiKey });
+  return new OpenAI({
+    apiKey,
+    timeout: OPENAI_TIMEOUT_MS,
+    maxRetries: OPENAI_MAX_RETRIES,
+  });
 }
 
 function toRecommendation(
@@ -209,11 +219,12 @@ export async function updateShopperSettings(
   });
 }
 
-export async function getRecentBuyerMessages(shop: string, sessionId?: string) {
+/** Recent shopper messages. Prefer leadId so shoppers never share AI history. */
+export async function getRecentBuyerMessages(shop: string, leadId?: string) {
   return prisma.buyerChatMessage.findMany({
-    where: { shop },
+    where: leadId ? { shop, leadId } : { shop },
     orderBy: { createdAt: "desc" },
-    take: sessionId ? MAX_HISTORY : 50,
+    take: leadId ? MAX_HISTORY : 50,
   });
 }
 
@@ -462,11 +473,14 @@ export async function answerBuyerQuestion(options: {
     ),
   );
 
-  const history = await prisma.buyerChatMessage.findMany({
-    where: { shop },
-    orderBy: { createdAt: "desc" },
-    take: MAX_HISTORY,
-  });
+  // Lead-scoped only — never mix other shoppers' PII into this chat's OpenAI context.
+  const history = leadId
+    ? await prisma.buyerChatMessage.findMany({
+        where: { shop, leadId },
+        orderBy: { createdAt: "desc" },
+        take: MAX_HISTORY,
+      })
+    : [];
   history.reverse();
 
   const productContext = toAiProductContext(picks.slice(0, 8));

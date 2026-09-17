@@ -5,8 +5,9 @@ import type {
 } from "react-router";
 import { redirect, useFetcher, useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { authenticate } from "../shopify.server";
+import { authenticate, authenticateAdminWithBilling } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { safeActionError } from "../services/http.server";
 import {
   deleteBundle,
   getBundleById,
@@ -35,13 +36,17 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateAdminWithBilling(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "resync") {
-    const result = await syncBundleHealth(admin, params.id!, session.shop);
-    return { ok: true, health: result.health };
+    try {
+      const result = await syncBundleHealth(admin, params.id!, session.shop);
+      return { ok: true, health: result.health };
+    } catch (error) {
+      return { ok: false, ...safeActionError("bundles.resync", error) };
+    }
   }
 
   if (intent === "delete") {
@@ -53,11 +58,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       });
       return redirect("/app");
     } catch (error) {
-      return {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : "Failed to delete bundle",
-      };
+      return { ok: false, ...safeActionError("bundles.delete", error) };
     }
   }
 

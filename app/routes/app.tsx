@@ -3,16 +3,11 @@ import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 
-import { authenticate } from "../shopify.server";
-import {
-  requirePaidPlan,
-  shouldEnforceBilling,
-  PRO_PLAN,
-} from "../billing.server";
+import { authenticateAdminWithBilling } from "../shopify.server";
+import { shouldEnforceBilling, PRO_PLAN } from "../billing.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing } = await authenticate.admin(request);
-  const billingCheck = await requirePaidPlan(request, billing);
+  const { billingCheck } = await authenticateAdminWithBilling(request);
   const subscriptionName = billingCheck.appSubscriptions[0]?.name ?? null;
   // When SHOPIFY_BILLING_TEST unlocks features, show Pro so nav isn't blank "Plan"
   const planName =

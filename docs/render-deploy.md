@@ -15,7 +15,7 @@ Free web services **sleep** and break Shopify webhooks — this Blueprint uses *
 |----------|--------|
 | `SHOPIFY_API_KEY` | Partner client ID |
 | `SHOPIFY_API_SECRET` | Partner secret |
-| `SHOPIFY_APP_URL` | `https://bundleguard.onrender.com` (exact service URL after create) |
+| `SHOPIFY_APP_URL` | `https://bundleguard-24n6.onrender.com` (exact service URL — must match Partner App URL) |
 | `OPENAI_API_KEY` | your key |
 | `SUPPORT_EMAIL` | support inbox |
 | `PRIVACY_EMAIL` | privacy inbox |

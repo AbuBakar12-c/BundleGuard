@@ -27,6 +27,9 @@ docs/production-inputs.env
 production.railway.vars.env
 production.render.vars.env
 
+# Temporary CLI scaffold for Partner app create (not the real product repo)
+_new_partner_app/
+
 # Keep package-lock.json tracked so Render Docker `npm ci` works
 yarn.lock
 pnpm-lock.yaml

@@ -4,6 +4,7 @@
  */
 import prisma from "../app/db.server";
 import {
+  claimWebhookDelivery,
   exportCustomerData,
   purgeShopData,
   redactCustomerData,
@@ -90,6 +91,31 @@ async function main() {
   await assert(bundles === 0, "bundles purged");
   await assert(leads === 0, "leads purged");
   await assert(settings === 0, "settings purged");
+
+  console.log("5) webhook delivery idempotency");
+  const webhookId = "smoke-webhook-1";
+  const first = await claimWebhookDelivery({
+    shop: SHOP,
+    topic: "orders/create",
+    webhookId,
+  });
+  const duplicate = await claimWebhookDelivery({
+    shop: SHOP,
+    topic: "orders/create",
+    webhookId,
+  });
+  await assert(first === true, "first delivery is claimed");
+  await assert(
+    duplicate === false,
+    "duplicate delivery (same shop+topic+webhookId) is rejected, not silently swallowed as an error",
+  );
+  // A different topic with the same webhookId is a distinct delivery.
+  const differentTopic = await claimWebhookDelivery({
+    shop: SHOP,
+    topic: "inventory_levels/update",
+    webhookId,
+  });
+  await assert(differentTopic === true, "same webhookId, different topic is a new delivery");
 
   console.log("\nAll Phase 1 smoke tests passed.");
 }

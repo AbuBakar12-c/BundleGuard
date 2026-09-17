@@ -16,6 +16,10 @@ import {
   getPlanContext,
   requireFeature,
 } from "../services/plan-access.server";
+import {
+  clientIpFromRequest,
+  rateLimit,
+} from "../services/rate-limit.server";
 
 interface Message {
   role: "user" | "assistant";
@@ -50,6 +54,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const question = String(formData.get("question") ?? "").trim();
   if (!question) {
     return { answer: "Please type a question about your bundle inventory." };
+  }
+
+  const limited = rateLimit({
+    key: `merchant-ai:${session.shop}:${clientIpFromRequest(request)}`,
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (!limited.ok) {
+    return {
+      answer: `You're sending questions too quickly. Please wait ${limited.retryAfterSec}s and try again.`,
+      error: true,
+    };
   }
 
   try {

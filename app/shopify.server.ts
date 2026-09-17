@@ -12,6 +12,7 @@ import {
   STARTER_PLAN,
   GROWTH_PLAN,
   PRO_PLAN,
+  requirePaidPlan,
 } from "./billing.server";
 
 export {
@@ -75,3 +76,18 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+
+/**
+ * Single entry point for any admin route that mutates state or performs a
+ * paid action. Wraps `authenticate.admin` + `requirePaidPlan` so a route
+ * can't be authenticated without also being billing-gated — that split
+ * (auth in one call, billing in a separate call a developer has to
+ * remember) is what let resync/delete actions bypass billing before.
+ * Feature-specific gates (requireFeature/assertFeatureOrThrow) still layer
+ * on top of this for routes that need more than "any active plan".
+ */
+export async function authenticateAdminWithBilling(request: Request) {
+  const context = await authenticate.admin(request);
+  const billingCheck = await requirePaidPlan(request, context.billing);
+  return { ...context, billingCheck };
+}

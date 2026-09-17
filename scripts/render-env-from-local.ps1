@@ -23,7 +23,7 @@ $inputs = Read-DotEnv (Join-Path $root "production.inputs.env")
 $support = if ($inputs["SUPPORT_EMAIL"]) { $inputs["SUPPORT_EMAIL"] } else { "mabubakr.pro@gmail.com" }
 $privacy = if ($inputs["PRIVACY_EMAIL"]) { $inputs["PRIVACY_EMAIL"] } else { $support }
 $company = if ($inputs["COMPANY_NAME"]) { $inputs["COMPANY_NAME"] } else { "BundleGuard" }
-$appUrl = if ($inputs["PRODUCTION_APP_URL"]) { $inputs["PRODUCTION_APP_URL"] } else { "https://bundleguard.onrender.com" }
+$appUrl = if ($inputs["PRODUCTION_APP_URL"]) { $inputs["PRODUCTION_APP_URL"] } else { "https://bundleguard-24n6.onrender.com" }
 
 $lines = @(
   "NODE_ENV=production"

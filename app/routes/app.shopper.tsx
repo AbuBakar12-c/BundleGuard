@@ -76,7 +76,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (intent === "save") {
     const buyerEnabled = formData.get("buyerEnabled") === "on";
-    const welcomeMessage = String(formData.get("welcomeMessage") ?? "").trim();
+    const welcomeMessage = String(formData.get("welcomeMessage") ?? "")
+      .trim()
+      .slice(0, 300);
 
     await updateShopperSettings(session.shop, {
       buyerEnabled,

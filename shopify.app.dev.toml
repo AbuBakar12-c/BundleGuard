@@ -35,6 +35,18 @@ api_version = "2025-10"
   topics = ["inventory_levels/update"]
   uri = "/webhooks/inventory/update"
 
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "/webhooks/compliance"
+
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/update"]
+  uri = "/webhooks/app_subscriptions/update"
+
 [app_proxy]
 url = "/apps/bundleguard"
 prefix = "apps"

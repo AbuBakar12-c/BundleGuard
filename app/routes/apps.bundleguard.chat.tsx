@@ -33,10 +33,8 @@ function isValidImageDataUrl(image: string) {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const context = await authenticate.public.appProxy(request);
-    const url = new URL(request.url);
-    const shop = normalizeShopDomain(
-      url.searchParams.get("shop") ?? context.session?.shop,
-    );
+    // Trust HMAC-verified session only — never prefer unsigned query shop=.
+    const shop = normalizeShopDomain(context.session?.shop);
 
     if (!shop) {
       return publicJson({ enabled: false, welcomeMessage: "" }, { status: 400 });

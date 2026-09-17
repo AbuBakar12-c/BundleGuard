@@ -5,8 +5,9 @@ import type {
 } from "react-router";
 import { useFetcher, useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { authenticate } from "../shopify.server";
+import { authenticate, authenticateAdminWithBilling } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { safeActionError } from "../services/http.server";
 import {
   getBundlesForShop,
   syncAllBundles,
@@ -59,18 +60,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateAdminWithBilling(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "resync-all") {
-    await syncAllBundles(admin, session.shop);
-    return { ok: true, message: "All bundles resynced" };
+    try {
+      await syncAllBundles(admin, session.shop);
+      return { ok: true, message: "All bundles resynced" };
+    } catch (error) {
+      return { ok: false, ...safeActionError("bundles.resync-all", error) };
+    }
   }
 
   if (intent === "dismiss-alerts") {
-    await markAlertsRead(session.shop);
-    return { ok: true };
+    try {
+      await markAlertsRead(session.shop);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, ...safeActionError("alerts.dismiss", error) };
+    }
   }
 
   return { ok: false };

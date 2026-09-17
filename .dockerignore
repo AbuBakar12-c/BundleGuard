@@ -6,6 +6,7 @@ node_modules
 !.env.example
 production.inputs.env
 production.railway.vars.env
+production.render.vars.env
 prisma/dev.sqlite
 prisma/dev.sqlite-journal
 *.sqlite

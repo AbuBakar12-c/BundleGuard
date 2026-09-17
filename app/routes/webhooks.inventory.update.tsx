@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import { syncAllBundles } from "../services/bundles.server";
+import { logWebhookFailure } from "../services/http.server";
 import { claimWebhookDelivery } from "../services/shop-data.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -25,10 +26,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     await syncAllBundles(admin, shop);
   } catch (error) {
-    console.error(
-      `[BundleGuard] inventory_levels/update sync failed for ${shop}`,
-      error,
-    );
+    await logWebhookFailure("inventory_levels/update", shop, error);
   }
 
   return new Response();

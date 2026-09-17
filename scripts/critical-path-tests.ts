@@ -4,6 +4,9 @@
  */
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   effectiveFeatures,
   featuresForPlan,
@@ -149,6 +152,38 @@ check("recommend quiz options come only from catalog categories", () => {
   const budgets = buildBudgetOptionsFromProducts(winter);
   assert.ok(budgets.length >= 1);
   assert.ok(budgets.every((b) => !/electronics/i.test(b.label)));
+});
+
+check("mutating admin route actions stay billing/feature gated", () => {
+  // Regression guard: `app._index.tsx` and `app.bundles.$id.tsx` actions
+  // used to call only `authenticate.admin` and skip billing entirely,
+  // because the ancestor `app.tsx` loader that gates the rest of the app
+  // never re-runs for a fetcher POST to a leaf route's action. Fixed by
+  // routing every mutating admin action through one of the gate calls
+  // below. This test reads each route's source and fails loudly if a
+  // future edit drops the gate, or a new ungated action is added without
+  // updating this manifest.
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const routesDir = path.join(__dirname, "..", "app", "routes");
+  const requiredGateByFile: Record<string, string> = {
+    "app._index.tsx": "authenticateAdminWithBilling",
+    "app.bundles.$id.tsx": "authenticateAdminWithBilling",
+    "app.bundles.new.tsx": "billing.check",
+    "app.chat.tsx": "requireFeature",
+    "app.shopper.tsx": "requireFeature",
+    "app.audits.tsx": "requireFeature",
+  };
+
+  for (const [file, requiredGate] of Object.entries(requiredGateByFile)) {
+    const source = fs.readFileSync(path.join(routesDir, file), "utf8");
+    const actionIndex = source.indexOf("export const action");
+    assert.ok(actionIndex !== -1, `${file} is expected to export an action`);
+    const actionOnward = source.slice(actionIndex);
+    assert.ok(
+      actionOnward.includes(requiredGate),
+      `${file}'s action must call ${requiredGate} — a mutating admin action must never bypass billing/feature gating`,
+    );
+  }
 });
 
 check("greetings are not treated as product search", () => {

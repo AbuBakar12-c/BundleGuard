@@ -1,4 +1,5 @@
 import prisma from "../db.server";
+import { UserFacingError } from "./http.server";
 import type {
   AuditIssue,
   BundleHealthResult,
@@ -106,7 +107,7 @@ async function fetchVariantInventory(
   );
 
   if (!response.ok) {
-    throw new Error(
+    throw new UserFacingError(
       `Inventory lookup failed (HTTP ${response.status}). Try again shortly.`,
     );
   }
@@ -117,7 +118,7 @@ async function fetchVariantInventory(
   };
 
   if (json.errors?.length) {
-    throw new Error(
+    throw new UserFacingError(
       `Inventory GraphQL error: ${json.errors.map((e) => e.message).join("; ")}`,
     );
   }
@@ -131,7 +132,7 @@ async function fetchVariantInventory(
 
   const missing = variantIds.filter((id) => !map.has(id));
   if (missing.length === variantIds.length) {
-    throw new Error(
+    throw new UserFacingError(
       "Could not load any component variants from Shopify. Check product access and try resync.",
     );
   }
@@ -244,7 +245,7 @@ export async function syncBundleHealth(
 ) {
   const bundle = await getBundleById(shop, bundleId);
   if (!bundle) {
-    throw new Error("Bundle not found");
+    throw new UserFacingError("Bundle not found");
   }
 
   const variantIds = bundle.components.map((c) => c.productVariantId);
@@ -362,19 +363,48 @@ export async function syncBundleHealth(
   };
 }
 
+// Bounded concurrency: fast enough that a webhook burst (orders/create,
+// inventory_levels/update) doesn't serialize one Shopify GraphQL round trip
+// per bundle, but low enough to stay well under a shop's API rate-limit
+// bucket. Each bundle's read/write is independent (keyed by its own
+// bundleId, no shared mutable state), so running them concurrently cannot
+// mix data between bundles or shops.
+const SYNC_CONCURRENCY = 3;
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  async function worker() {
+    for (;;) {
+      const index = next++;
+      if (index >= items.length) return;
+      results[index] = await fn(items[index]);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  );
+  return results;
+}
+
 export async function syncAllBundles(admin: AdminGraphql, shop: string) {
   const bundles = await getBundlesForShop(shop);
-  const results = [];
 
-  for (const bundle of bundles) {
+  return mapWithConcurrency(bundles, SYNC_CONCURRENCY, async (bundle) => {
     try {
-      results.push(await syncBundleHealth(admin, bundle.id, shop));
+      return await syncBundleHealth(admin, bundle.id, shop);
     } catch (error) {
       console.error(
         `[BundleGuard] sync failed for bundle ${bundle.id} (${shop})`,
         error,
       );
-      results.push({
+      return {
         bundle,
         health: {
           status: bundle.status as BundleStatus,
@@ -388,11 +418,9 @@ export async function syncAllBundles(admin: AdminGraphql, shop: string) {
         },
         locationGaps: [],
         snapshots: [] as VariantLocationSnapshot[],
-      });
+      };
     }
-  }
-
-  return results;
+  });
 }
 
 export async function createBundle(
@@ -438,7 +466,7 @@ export async function createBundle(
   const productErrors = productJson.data?.productCreate?.userErrors ?? [];
 
   if (productErrors.length > 0 || !product) {
-    throw new Error(
+    throw new UserFacingError(
       productErrors.map((e: { message: string }) => e.message).join(", ") ||
         "Failed to create bundle product",
     );
@@ -446,6 +474,8 @@ export async function createBundle(
 
   const variantId = product.variants.nodes[0]?.id as string;
 
+  // `reason` must always be curated/safe text — this is the message shown
+  // to the merchant verbatim after the rollback.
   const rollbackProduct = async (reason: string) => {
     try {
       await admin.graphql(
@@ -465,7 +495,7 @@ export async function createBundle(
         error,
       );
     }
-    throw new Error(reason);
+    throw new UserFacingError(reason);
   };
 
   const priceResponse = await admin.graphql(
@@ -554,11 +584,19 @@ export async function createBundle(
 
     return syncBundleHealth(admin, bundle.id, shop);
   } catch (error) {
-    await rollbackProduct(
-      error instanceof Error
-        ? error.message
-        : "Failed to save bundle after Shopify product create",
-    );
+    // Only forward messages we already curated as safe (UserFacingError).
+    // Anything else (Prisma/network/unexpected) is logged, never shown raw.
+    if (error instanceof UserFacingError) {
+      await rollbackProduct(error.message);
+    } else {
+      console.error(
+        "[BundleGuard] createBundle failed saving bundle after Shopify product create",
+        error,
+      );
+      await rollbackProduct(
+        "Failed to save bundle after Shopify product create. The Shopify product was rolled back.",
+      );
+    }
     throw error;
   }
 }
@@ -612,7 +650,7 @@ export async function deleteBundle(
 ) {
   const bundle = await getBundleById(shop, bundleId);
   if (!bundle) {
-    throw new Error("Bundle not found");
+    throw new UserFacingError("Bundle not found");
   }
 
   if (options?.deleteShopifyProduct && options.admin && bundle.productId) {
@@ -640,13 +678,20 @@ export async function deleteBundle(
       ...(json.data?.productDelete?.userErrors?.map((e) => e.message) ?? []),
     ];
     if (errors.length > 0) {
-      throw new Error(
+      throw new UserFacingError(
         `Could not delete Shopify product: ${errors.join("; ")}. Bundle record was not removed.`,
       );
     }
   }
 
-  await prisma.inventoryAlert.deleteMany({ where: { shop, bundleId } });
-  await prisma.bundle.delete({ where: { id: bundle.id } });
+  try {
+    await prisma.inventoryAlert.deleteMany({ where: { shop, bundleId } });
+    await prisma.bundle.delete({ where: { id: bundle.id } });
+  } catch (error) {
+    console.error("[BundleGuard] deleteBundle DB delete failed", error);
+    throw new UserFacingError(
+      "Could not remove the bundle record. Please try again.",
+    );
+  }
   return bundle;
 }

@@ -32,6 +32,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run critical-path checks (billing gates, plan gates, tenant helpers)
+        run: npm run test:critical
+
       - name: Validate Prisma
         run: npx prisma generate && npx prisma validate
 

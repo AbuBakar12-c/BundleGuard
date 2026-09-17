@@ -1,13 +1,24 @@
 # App Store pre-submission checklist
 
-Updated Sep 10, 2026. See also `docs/production-readiness.md`.
+Updated Sep 17, 2026. See also `docs/production-readiness.md`.
 
 ## Automated / code-backed
 
 - [x] Embedded app (`embedded = true`)
 - [x] Shopify Billing via Billing API (plans in `billing.server.ts`)
+- [x] Billing enforced on **every** mutating admin action, not only the app-wide
+      layout loader — `authenticateAdminWithBilling()` in `shopify.server.ts`,
+      a lapsed/declined subscription can no longer keep using resync/delete
+      via a direct fetcher POST (fixed Sep 2026 audit; regression-guarded by
+      `scripts/critical-path-tests.ts`, wired into CI)
 - [x] Mandatory compliance webhooks in TOML → `/webhooks/compliance`
+- [x] `app_subscriptions/update` webhook registered (both TOMLs) so a plan
+      cancellation/downgrade is logged as soon as Shopify reports it
 - [x] Uninstall purge of shop PII/data
+- [x] Webhook handler failures (uninstall purge, GDPR redact/export, order
+      and inventory sync, session scope update) are structured-logged and
+      optionally alertable via `OPS_ALERT_WEBHOOK_URL` — previously only a
+      `console.error` line nobody was watching
 - [x] Privacy policy page at `/privacy` (SUPPORT_EMAIL / COMPANY_NAME)
 - [x] App proxy configured for Shopper AI
 - [x] Shopper proxy **Pro-gated** (loader + action)
@@ -20,20 +31,28 @@ Updated Sep 10, 2026. See also `docs/production-readiness.md`.
 - [x] Health `/healthz` + readiness `/readyz`
 - [x] Docker + Render Blueprint (`render.yaml`)
 - [x] `npm run doctor` / `test:critical` / `deploy:check`
+- [x] `test:critical` now runs in CI on every push/PR (`.github/workflows/ci.yml`)
+- [x] Client-facing errors on bundle create/delete/resync no longer leak raw
+      Prisma/internal exception text — only pre-curated merchant-safe
+      messages are shown verbatim (`UserFacingError` / `safeActionError`)
 
 ## Must complete on your side before submit
 
-- [ ] Deploy to stable HTTPS host (Render — see `docs/render-deploy.md`)
-- [ ] Replace `REPLACE_WITH_PRODUCTION_HOST` via `scripts/set-production-url.ps1`
-- [ ] Set host `SHOPIFY_APP_URL` + Postgres `DATABASE_URL`
-- [ ] `SHOPIFY_BILLING_TEST=false` on host
-- [ ] `npx shopify app deploy --config shopify.app.toml`
-- [ ] Partner-owned app for live charges
-- [ ] Privacy URL in Partner listing = `https://YOUR_HOST/privacy`
+- [x] Deploy to stable HTTPS host (Render — `https://bundleguard-24n6.onrender.com`)
+- [x] Production URLs in `shopify.app.toml` (not placeholder)
+- [ ] Confirm Render Dashboard `SHOPIFY_APP_URL` = `https://bundleguard-24n6.onrender.com`
+- [x] Host Postgres via Render + `/readyz` db:up
+- [x] `SHOPIFY_BILLING_TEST=false` in production vars file
+- [x] Active app version released (bundleguard-6+)
+- [ ] Partner **Public** distribution (required for Billing API charges)
+- [ ] Privacy URL in Partner listing = `https://bundleguard-24n6.onrender.com/privacy`
 - [ ] App Store screenshots + listing copy
 - [ ] Rotate any previously exposed API secrets
-- [ ] Fresh development-store install smoke test
-- [ ] `npm run smoke:prod -- https://YOUR_HOST`
+- [ ] Fresh development-store install + Plan trial smoke test
+- [x] `npm run smoke:prod -- https://bundleguard-24n6.onrender.com`
+- [ ] **New this session:** run `npx shopify app deploy --config shopify.app.toml`
+      to register the added `app_subscriptions/update` webhook subscription
+      with Shopify — the TOML change alone does not reach Shopify until deployed
 
 ## Plan gating (marketing must match)
 

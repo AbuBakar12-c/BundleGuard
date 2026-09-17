@@ -14,7 +14,7 @@ Shopify app that keeps product bundle inventory accurate: health dashboard, OOS 
 
 ### Prerequisites
 
-- Node.js 20.11+ (22.12+ recommended)
+- Node.js 22+ (required — see `package.json` engines, `Dockerfile`, `nixpacks.toml`)
 - Shopify Partner account
 - Shopify CLI (`npm install -g @shopify/cli@latest`)
 

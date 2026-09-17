@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
+import { logWebhookFailure } from "../services/http.server";
 import {
   claimWebhookDelivery,
   exportCustomerData,
@@ -82,8 +83,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         console.warn(`[BundleGuard] Unhandled compliance topic: ${topic}`);
     }
   } catch (error) {
-    console.error(`[BundleGuard] Compliance webhook failed (${topic})`, error);
-    // Acknowledge so Shopify does not infinite-retry on transient bugs.
+    // Acknowledge so Shopify does not infinite-retry on transient bugs — a
+    // failed GDPR export/redact/purge must still be visible to an operator,
+    // since it will not be retried.
+    await logWebhookFailure(String(topic), shop, error);
   }
 
   return new Response();
