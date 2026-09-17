@@ -154,6 +154,47 @@ export function buildCategoryOptionsFromCatalog(
   return options;
 }
 
+export type CategoryTile = {
+  id: string;
+  label: string;
+  value: string;
+  imageUrl: string | null;
+  count: number;
+};
+
+/**
+ * Top categories/collections with a representative product image each, for
+ * the storefront widget's opening screen (browse-by-category, no chat
+ * required). Reuses the same label source as the text-based quiz so both
+ * stay consistent with each other.
+ */
+export function buildCategoryTilesFromCatalog(
+  catalog: StoreCatalog,
+  limit = 6,
+): CategoryTile[] {
+  const insights = buildStoreCatalogInsights(catalog);
+  const labels =
+    insights.collections.length > 0 ? insights.collections : insights.categories;
+
+  return labels.slice(0, limit).map((item) => {
+    const representative = catalog.products.find(
+      (p) =>
+        (p.productType.toLowerCase() === item.name.toLowerCase() ||
+          p.collections.some(
+            (c) => c.toLowerCase() === item.name.toLowerCase(),
+          )) &&
+        p.imageUrl,
+    );
+    return {
+      id: item.name,
+      label: item.name,
+      value: item.name,
+      imageUrl: representative?.imageUrl ?? null,
+      count: item.count,
+    };
+  });
+}
+
 export function buildCategoryQuizCard(catalog: StoreCatalog): RecommendQuizCard {
   return {
     step: "category",

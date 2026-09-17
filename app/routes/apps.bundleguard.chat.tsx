@@ -2,6 +2,8 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import {
   answerBuyerQuestion,
+  browseCategoryProducts,
+  getShopperCategoryTiles,
   getShopperSettings,
   getShopperStoreInsights,
 } from "../services/buyer-assistant.server";
@@ -104,6 +106,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       console.error("[apps.bundleguard.chat] store insights failed", error);
     }
 
+    let categoryTiles: Awaited<ReturnType<typeof getShopperCategoryTiles>> = [];
+    try {
+      categoryTiles = await getShopperCategoryTiles(context.admin, shop);
+    } catch (error) {
+      console.error("[apps.bundleguard.chat] category tiles failed", error);
+    }
+
     return publicJson({
       enabled: true,
       welcomeMessage: settings.welcomeMessage,
@@ -112,6 +121,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       productCount: storeInsights?.productCount ?? null,
       categories: storeInsights?.categories ?? [],
       collections: storeInsights?.collections ?? [],
+      categoryTiles,
       suggestions: storeInsights?.suggestions ?? [
         "Help me choose",
         "What's in stock?",
@@ -179,7 +189,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const limited = rateLimit(
       intent === "lead"
         ? { key: `lead:${shop}:${ip}`, limit: 8, windowMs: 60_000 }
-        : { key: `chat:${shop}:${ip}`, limit: 20, windowMs: 60_000 },
+        : intent === "browse-category"
+          ? { key: `browse:${shop}:${ip}`, limit: 40, windowMs: 60_000 }
+          : { key: `chat:${shop}:${ip}`, limit: 20, windowMs: 60_000 },
     );
     if (!limited.ok) {
       return publicJson(
@@ -241,6 +253,35 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 : "Could not save your details.",
           },
           { status: 400 },
+        );
+      }
+    }
+
+    if (intent === "browse-category") {
+      const category = String(
+        (body as { category?: unknown }).category ?? "",
+      )
+        .trim()
+        .slice(0, MAX_CATEGORY_LEN);
+      if (!category) {
+        return publicJson(
+          { ok: false, error: "invalid_category", recommendations: [] },
+          { status: 400 },
+        );
+      }
+      try {
+        const recommendations = await browseCategoryProducts(
+          context.admin,
+          shop,
+          category,
+        );
+        return publicJson({ ok: true, category, recommendations });
+      } catch (error) {
+        return logAndPublicError(
+          "apps.bundleguard.chat.browse-category",
+          error,
+          500,
+          "Couldn't load that category right now. Please try again.",
         );
       }
     }

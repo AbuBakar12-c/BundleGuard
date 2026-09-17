@@ -38,6 +38,14 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  /* Same motion as bg-panel-in, but keeps the panel's horizontal centering
+     (translateX(-50%)) throughout — bg-panel-in alone would momentarily
+     override that transform and make the panel jump sideways at the end. */
+  @keyframes bg-panel-in-centered {
+    from { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+
   @keyframes bg-msg-in {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -54,16 +62,17 @@
 
   .bg-shopper-launcher-wrap {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
     z-index: 99999;
   }
 
   .bg-shopper-launcher-glow {
     position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 128, 96, 0.35) 0%, rgba(0, 128, 96, 0) 70%);
+    inset: -8px;
+    border-radius: 999px;
+    background: radial-gradient(ellipse, rgba(0, 128, 96, 0.32) 0%, rgba(0, 128, 96, 0) 70%);
     animation: bg-launcher-glow 2.2s ease-in-out infinite;
     pointer-events: none;
   }
@@ -74,16 +83,20 @@
 
   .bg-shopper-launcher {
     position: relative;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    height: 52px;
+    padding: 0 22px 0 18px;
+    border-radius: 999px;
     border: none;
     background: linear-gradient(135deg, var(--bg-dark), var(--bg-primary));
     color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
     transition: transform 0.2s ease, background 0.2s ease;
     animation: bg-launcher-pulse 2.2s ease-in-out infinite;
   }
@@ -94,10 +107,19 @@
     background: linear-gradient(135deg, #1a1a1a, #303030);
   }
 
+  .bg-shopper-launcher-icons {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
   .bg-shopper-launcher svg {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     position: absolute;
+    top: 0;
+    left: 0;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
@@ -116,16 +138,21 @@
     transform: rotate(0deg) scale(1);
   }
 
+  .bg-shopper-launcher-wrap.is-open .bg-shopper-launcher-label {
+    display: none;
+  }
+
   .bg-shopper-launcher:hover {
-    transform: scale(1.06);
+    transform: scale(1.04);
   }
 
   .bg-shopper-panel {
     position: fixed;
-    right: 20px;
-    bottom: 88px;
-    width: min(380px, calc(100vw - 24px));
-    height: 560px;
+    left: 50%;
+    bottom: 86px;
+    transform: translateX(-50%);
+    width: min(400px, calc(100vw - 24px));
+    height: min(600px, calc(100vh - 120px));
     border-radius: 16px;
     border: 1px solid var(--border);
     background: #fff;
@@ -134,12 +161,12 @@
     flex-direction: column;
     overflow: hidden;
     z-index: 99999;
-    transform-origin: bottom right;
+    transform-origin: bottom center;
   }
 
   .bg-shopper-panel.open {
     display: flex;
-    animation: bg-panel-in 0.28s ease-out;
+    animation: bg-panel-in-centered 0.28s ease-out;
   }
 
   .bg-shopper-header {
@@ -366,6 +393,90 @@
 
   .bg-product-cta:hover {
     background: var(--bg-dark);
+  }
+
+  .bg-product-cta:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  .bg-product-cta.added {
+    background: #0d7a4f;
+  }
+
+  .bg-product-cta-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .bg-view-cart-link {
+    font-size: 11px;
+    color: var(--bg-primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .bg-view-cart-link:hover {
+    text-decoration: underline;
+  }
+
+  .bg-category-tiles {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 2px 2px 12px;
+    margin-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .bg-category-tile {
+    flex: 0 0 auto;
+    width: 92px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .bg-category-tile-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f4f6f8, #eef1f4);
+    border: 1px solid #eceef0;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .bg-category-tile:hover .bg-category-tile-image {
+    border-color: var(--bg-primary);
+    box-shadow: 0 4px 14px rgba(0, 128, 96, 0.15);
+  }
+
+  .bg-category-tile-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .bg-category-tile span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: center;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .bg-shopper-suggestions {
@@ -607,15 +718,12 @@
     cursor: not-allowed;
   }
 
-  .bg-chat-locked .bg-shopper-suggestions,
-  .bg-chat-locked .bg-shopper-input,
-  .bg-chat-locked .bg-image-preview {
-    opacity: 0.45;
-    pointer-events: none;
+  .bg-lead-gate {
+    display: none;
   }
 
-  .bg-lead-gate.hidden {
-    display: none;
+  .bg-lead-gate.visible {
+    display: block;
   }
 
   .bg-quiz-card {
@@ -764,13 +872,16 @@
       <div class="bg-shopper-launcher-wrap">
         <div class="bg-shopper-launcher-glow" aria-hidden="true"></div>
         <button class="bg-shopper-launcher" aria-label="Open shopping assistant" aria-expanded="false">
-          <svg class="bg-launcher-icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <svg class="bg-launcher-icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <span class="bg-shopper-launcher-icons">
+            <svg class="bg-launcher-icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <svg class="bg-launcher-icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </span>
+          <span class="bg-shopper-launcher-label">Chat with us</span>
         </button>
       </div>
       <section class="bg-shopper-panel" aria-label="BundleGuard shopper assistant">
@@ -808,6 +919,7 @@
         </div>
         <div class="bg-shopper-messages">
           <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.</div>
+          <div class="bg-category-tiles" style="display:none;"></div>
         </div>
         <div class="bg-shopper-suggestions">
           <button type="button" data-suggestion="Help me choose ✨">Help me choose ✨</button>
@@ -863,12 +975,16 @@
     const leadForm = root.querySelector(".bg-lead-form");
     const leadError = root.querySelector(".bg-lead-error");
     const leadSubmit = root.querySelector(".bg-lead-submit");
+    const categoryTilesEl = root.querySelector(".bg-category-tiles");
 
     let enabled = true;
     let thinking = false;
     let pendingImage = null;
     let settingsLoaded = false;
     let quizState = { category: null, budget: null };
+    // Runs automatically once the lead form is submitted successfully —
+    // browsing (category tiles) never needs this; only a real question does.
+    let pendingAction = null;
     let leadId = null;
     try {
       leadId = localStorage.getItem("bg_shopper_lead_id");
@@ -876,22 +992,29 @@
       leadId = null;
     }
 
-    function setLeadUnlocked(unlocked) {
-      panel.classList.toggle("bg-chat-locked", !unlocked);
-      if (unlocked) leadGate.classList.add("hidden");
-      else leadGate.classList.remove("hidden");
+    function showLeadGate() {
+      leadGate.classList.add("visible");
+      leadGate.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
-    setLeadUnlocked(Boolean(leadId));
+    function hideLeadGate() {
+      leadGate.classList.remove("visible");
+    }
+
+    /** Browsing is always free; only a real question/AI answer needs a lead. */
+    function requireLeadThen(action) {
+      if (leadId) {
+        action();
+        return;
+      }
+      pendingAction = action;
+      showLeadGate();
+    }
 
     suggestionsEl.querySelectorAll("[data-suggestion]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (!leadId) {
-          leadError.textContent = "Please enter your name and email first.";
-          leadError.classList.add("visible");
-          return;
-        }
-        sendMessage(btn.getAttribute("data-suggestion"));
+        const text = btn.getAttribute("data-suggestion");
+        requireLeadThen(() => sendMessage(text));
       });
     });
 
@@ -934,11 +1057,16 @@
           localStorage.removeItem("bg_shopper_has_profile");
           localStorage.removeItem("bg_shopper_profile_preview");
         } catch (_) {}
-        setLeadUnlocked(true);
+        hideLeadGate();
         addMessage(
           "assistant",
           data.message || `Thanks ${name}! Ask me anything about our products.`,
         );
+        if (pendingAction) {
+          const action = pendingAction;
+          pendingAction = null;
+          action();
+        }
       } catch (_) {
         leadError.textContent = "Connection issue. Please try again.";
         leadError.classList.add("visible");
@@ -1002,12 +1130,7 @@
         btn.type = "button";
         btn.textContent = text;
         btn.addEventListener("click", () => {
-          if (!leadId) {
-            leadError.textContent = "Please enter your name and email first.";
-            leadError.classList.add("visible");
-            return;
-          }
-          sendMessage(text);
+          requireLeadThen(() => sendMessage(text));
         });
         suggestionsEl.appendChild(btn);
       });
@@ -1068,19 +1191,146 @@
         meta.appendChild(reason);
         card.appendChild(meta);
 
-        const cta = document.createElement("a");
-        cta.className = "bg-product-cta";
-        cta.href = href;
-        cta.target = "_blank";
-        cta.rel = "noopener";
-        cta.textContent = "View";
-        card.appendChild(cta);
+        const ctaWrap = document.createElement("div");
+        ctaWrap.className = "bg-product-cta-row";
+
+        if (item.variantId) {
+          const addBtn = document.createElement("button");
+          addBtn.type = "button";
+          addBtn.className = "bg-product-cta";
+          addBtn.textContent = "+ Add to cart";
+          addBtn.addEventListener("click", () => addToCart(item.variantId, addBtn, ctaWrap));
+          ctaWrap.appendChild(addBtn);
+        } else {
+          const cta = document.createElement("a");
+          cta.className = "bg-product-cta";
+          cta.href = href;
+          cta.target = "_blank";
+          cta.rel = "noopener";
+          cta.textContent = "View";
+          ctaWrap.appendChild(cta);
+        }
+        card.appendChild(ctaWrap);
 
         wrap.appendChild(card);
       });
 
       messagesEl.appendChild(wrap);
       scrollToBottom();
+    }
+
+    /** Real Shopify Storefront Cart AJAX API — same-origin, no backend involved. */
+    async function addToCart(variantId, button, container) {
+      if (button.disabled) return;
+      button.disabled = true;
+      const original = button.textContent;
+      button.textContent = "Adding...";
+      try {
+        const res = await fetch("/cart/add.js", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ items: [{ id: Number(variantId), quantity: 1 }] }),
+        });
+        if (res.ok) {
+          button.textContent = "Added ✓";
+          button.classList.add("added");
+          try {
+            document.dispatchEvent(new CustomEvent("cart:refresh"));
+          } catch (_) {}
+          if (container && !container.querySelector(".bg-view-cart-link")) {
+            const viewCart = document.createElement("a");
+            viewCart.className = "bg-view-cart-link";
+            viewCart.href = "/cart";
+            viewCart.textContent = "View cart →";
+            container.appendChild(viewCart);
+          }
+          setTimeout(() => {
+            button.disabled = false;
+            button.textContent = original;
+            button.classList.remove("added");
+          }, 2500);
+        } else {
+          button.textContent = "Try again";
+          button.disabled = false;
+        }
+      } catch (_) {
+        button.textContent = "Try again";
+        button.disabled = false;
+      }
+    }
+
+    function renderCategoryTiles(tiles) {
+      if (!tiles || !tiles.length) {
+        categoryTilesEl.style.display = "none";
+        return;
+      }
+      categoryTilesEl.innerHTML = "";
+      tiles.forEach((tile) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bg-category-tile";
+
+        const imageWrap = document.createElement("div");
+        imageWrap.className = "bg-category-tile-image";
+        if (tile.imageUrl) {
+          const img = document.createElement("img");
+          try {
+            const u = new URL(String(tile.imageUrl), window.location.origin);
+            if (u.protocol === "http:" || u.protocol === "https:") img.src = u.href;
+          } catch (_) {}
+          img.alt = String(tile.label || "Category");
+          imageWrap.appendChild(img);
+        }
+
+        const label = document.createElement("span");
+        label.textContent = cleanText(tile.label || tile.value || "");
+
+        btn.appendChild(imageWrap);
+        btn.appendChild(label);
+        btn.addEventListener("click", () => browseCategory(tile.value, tile.label));
+        categoryTilesEl.appendChild(btn);
+      });
+      categoryTilesEl.style.display = "flex";
+    }
+
+    /** Category tap = free browsing, deterministic results, no lead/AI needed. */
+    async function browseCategory(value, label) {
+      if (thinking || !enabled || !value) return;
+      addMessage("user", label || value);
+      clearQuizCards();
+      setLoading(true);
+      const typing = showTyping();
+
+      try {
+        const res = await fetch(proxyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ intent: "browse-category", category: value }),
+        });
+        const raw = await res.text();
+        let data = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch (_) {
+          data = {};
+        }
+        typing.remove();
+
+        if (data.ok && Array.isArray(data.recommendations) && data.recommendations.length) {
+          addMessage("assistant", `Here's a curated selection from ${label || value}:`);
+          renderRecommendations(data.recommendations);
+        } else {
+          addMessage(
+            "assistant",
+            data.message || "Couldn't find products in that category right now.",
+          );
+        }
+      } catch (_) {
+        typing.remove();
+        addMessage("assistant", "Connection issue. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
 
     function clearQuizCards() {
@@ -1223,9 +1473,8 @@
           try {
             localStorage.removeItem("bg_shopper_lead_id");
           } catch (_) {}
-          setLeadUnlocked(false);
-          leadError.textContent = data.error || "Please enter your name and email again.";
-          leadError.classList.add("visible");
+          pendingAction = () => sendQuizStep(step, category, budget, displayText);
+          showLeadGate();
           return;
         }
 
@@ -1280,6 +1529,9 @@
           suggestions = data.suggestions;
           renderSuggestions(suggestions);
         }
+        if (Array.isArray(data.categoryTiles) && data.categoryTiles.length) {
+          renderCategoryTiles(data.categoryTiles);
+        }
       } catch {
         enabled = false;
         root.style.display = "none";
@@ -1291,9 +1543,8 @@
       if ((!question && !pendingImage) || thinking || !enabled) return;
 
       if (!leadId) {
-        leadError.textContent = "Please enter your name and email first.";
-        leadError.classList.add("visible");
-        setLeadUnlocked(false);
+        pendingAction = () => sendMessage(text);
+        showLeadGate();
         return;
       }
 
@@ -1327,9 +1578,8 @@
           try {
             localStorage.removeItem("bg_shopper_lead_id");
           } catch (_) {}
-          setLeadUnlocked(false);
-          leadError.textContent = data.error || "Please enter your name and email again.";
-          leadError.classList.add("visible");
+          pendingAction = () => sendMessage(question);
+          showLeadGate();
           return;
         }
 

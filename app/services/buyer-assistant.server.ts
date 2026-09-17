@@ -22,11 +22,14 @@ import {
 import {
   buildBudgetQuizCard,
   buildCategoryQuizCard,
+  buildCategoryTilesFromCatalog,
+  filterCatalogByCategory,
   resolveRecommendQuizPicks,
+  type CategoryTile,
   type RecommendQuizCard,
 } from "./recommend-quiz.server";
 
-export type { RecommendQuizCard };
+export type { RecommendQuizCard, CategoryTile };
 
 const MODEL = "gpt-4o-mini";
 const MAX_HISTORY = 10;
@@ -40,6 +43,16 @@ export interface ProductRecommendation {
   price: string;
   available: boolean;
   reason: string;
+  /** Numeric Storefront variant id (for /cart/add.js) — null if no variant is purchasable. */
+  variantId: string | null;
+}
+
+/** Shopify GraphQL GIDs look like "gid://shopify/ProductVariant/123" — the
+ * Storefront Cart AJAX API needs just the trailing numeric id. */
+function toStorefrontVariantId(gid: string | undefined | null) {
+  if (!gid) return null;
+  const match = gid.match(/(\d+)$/);
+  return match ? match[1] : null;
 }
 
 // Bound every OpenAI call to what a synchronous storefront chat request can
@@ -62,6 +75,7 @@ function toRecommendation(
   product: CatalogProduct,
   reason: string,
 ): ProductRecommendation {
+  const purchasable = product.variants.find((v) => v.available) ?? product.variants[0];
   return {
     id: product.id,
     title: product.title,
@@ -71,6 +85,7 @@ function toRecommendation(
     price: product.minPrice,
     available: product.available,
     reason,
+    variantId: toStorefrontVariantId(purchasable?.id),
   };
 }
 
@@ -594,4 +609,40 @@ export async function getShopperStoreInsights(
 ) {
   const catalog = await fetchFullStoreCatalog(admin, shop);
   return buildStoreCatalogInsights(catalog);
+}
+
+/**
+ * Category tiles for the widget's opening screen. No AI call, no lead
+ * required — this is pure catalog browsing, not a personalized answer.
+ */
+export async function getShopperCategoryTiles(
+  admin: AdminGraphql,
+  shop: string,
+): Promise<CategoryTile[]> {
+  const catalog = await fetchFullStoreCatalog(admin, shop);
+  return buildCategoryTilesFromCatalog(catalog);
+}
+
+/**
+ * Deterministic "top products in this category" — used when a shopper taps
+ * a category tile before giving their name/email. No OpenAI call and no
+ * lead requirement: this is browsing, not a personalized AI answer, so it
+ * stays outside the lead gate by design (see apps.bundleguard.chat.tsx).
+ */
+export async function browseCategoryProducts(
+  admin: AdminGraphql,
+  shop: string,
+  category: string,
+  limit = 6,
+): Promise<ProductRecommendation[]> {
+  const catalog = await fetchFullStoreCatalog(admin, shop);
+  const matches = filterCatalogByCategory(catalog, category)
+    .slice()
+    .sort((a, b) => {
+      if (a.available !== b.available) return a.available ? -1 : 1;
+      return Number(a.minPrice) - Number(b.minPrice);
+    })
+    .slice(0, limit);
+
+  return matches.map((p) => toRecommendation(p, `Popular in ${category}`));
 }
