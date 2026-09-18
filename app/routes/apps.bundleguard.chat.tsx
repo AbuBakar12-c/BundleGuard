@@ -118,6 +118,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       welcomeMessage: settings.welcomeMessage,
       requireLead: true,
       planName: entitlements.planName,
+      shopName: storeInsights?.shopName ?? null,
       productCount: storeInsights?.productCount ?? null,
       categories: storeInsights?.categories ?? [],
       collections: storeInsights?.collections ?? [],

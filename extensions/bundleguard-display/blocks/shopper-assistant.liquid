@@ -259,6 +259,17 @@
     font-style: normal;
   }
 
+  .bg-shopper-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .bg-shopper-cart-link {
+    text-decoration: none;
+  }
+
   .bg-shopper-close {
     background: var(--bg-surface);
     border: 1px solid var(--bg-line);
@@ -291,6 +302,25 @@
     padding: 18px;
     scroll-behavior: smooth;
     scrollbar-width: thin;
+  }
+
+  .bg-welcome {
+    margin-bottom: 14px;
+  }
+
+  .bg-welcome h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--bg-ink);
+  }
+
+  .bg-welcome-sub {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--bg-muted);
   }
 
   .bg-msg {
@@ -1029,12 +1059,21 @@
               <span class="bg-shopper-status"><i aria-hidden="true"></i>Online now</span>
             </div>
           </div>
-          <button type="button" class="bg-shopper-close" aria-label="Close chat">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+          <div class="bg-shopper-header-actions">
+            <a href="/cart" class="bg-shopper-close bg-shopper-cart-link" aria-label="View cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="8" cy="21" r="1"></circle>
+                <circle cx="19" cy="21" r="1"></circle>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+              </svg>
+            </a>
+            <button type="button" class="bg-shopper-close" aria-label="Close chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="bg-lead-gate" id="bg-lead-gate">
           <h3>Before we start</h3>
@@ -1049,7 +1088,10 @@
           </form>
         </div>
         <div class="bg-shopper-messages">
-          <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.</div>
+          <div class="bg-welcome">
+            <h2>Welcome<span class="bg-welcome-shop"></span> 👋</h2>
+            <p class="bg-welcome-sub">Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.</p>
+          </div>
           <div class="bg-category-tiles-wrap" style="display:none;">
             <div class="bg-category-tiles"></div>
             <button type="button" class="bg-category-tiles-next" aria-label="See more categories">
@@ -1665,9 +1707,13 @@
         const welcome =
           data.welcomeMessage ||
           "Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.";
-        const firstMsg = messagesEl.querySelector(".bg-msg.assistant");
-        if (firstMsg) {
-          firstMsg.textContent = cleanText(welcome);
+        const welcomeSub = root.querySelector(".bg-welcome-sub");
+        if (welcomeSub) {
+          welcomeSub.textContent = cleanText(welcome);
+        }
+        const welcomeShop = root.querySelector(".bg-welcome-shop");
+        if (welcomeShop && data.shopName) {
+          welcomeShop.textContent = ` to ${cleanText(String(data.shopName))}`;
         }
         if (Array.isArray(data.suggestions) && data.suggestions.length) {
           suggestions = data.suggestions;
