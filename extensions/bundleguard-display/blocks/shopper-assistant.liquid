@@ -157,34 +157,34 @@
     display: none;
   }
 
+  /* Full-height drawer docked to the right edge, not a floating card. */
   .bg-shopper-panel {
     position: fixed;
-    left: 50%;
-    bottom: 92px;
-    width: min(390px, calc(100vw - 32px));
-    height: min(650px, calc(100svh - 124px));
-    border: 1px solid var(--bg-line);
-    border-radius: var(--bg-radius);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100dvh;
+    width: min(420px, 100vw);
+    border: none;
+    border-left: 1px solid var(--bg-line);
+    border-radius: 0;
     color: var(--bg-ink);
     background: #fff;
-    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.2);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.16);
     display: none;
     flex-direction: column;
     overflow: hidden;
     z-index: 2147483000;
-    transform-origin: bottom center;
+    transform-origin: right center;
     opacity: 0;
-    /* translateX(-50%) must appear in every transform value here — a
-       transition/animation replaces the whole transform, so leaving it out
-       of just one state makes the panel jump sideways mid-transition. */
-    transform: translateX(-50%) translateY(18px) scale(0.97);
+    transform: translateX(100%);
     transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .bg-shopper-panel.open {
     display: flex;
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(0);
   }
 
   .bg-shopper-header {
@@ -1001,10 +1001,7 @@
       bottom: 16px;
     }
     .bg-shopper-panel {
-      bottom: 84px;
-      width: min(390px, calc(100vw - 24px));
-      height: min(640px, calc(100svh - 108px));
-      border-radius: 22px;
+      width: 100vw;
     }
     .bg-shopper-header {
       padding: 16px;
