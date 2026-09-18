@@ -16,18 +16,17 @@
   }
 
   #bundleguard-shopper-root {
-    /* Dark-glass / metallic palette to match a premium AI-concierge look:
-       near-black glass panel, silver/white accents. Stock-status keeps its
-       own green so "in stock" stays an unambiguous, separate signal. */
-    --bg-black: #0a0a0c;
-    --bg-ink: #f4f5f7;
-    --bg-muted: rgba(244, 245, 247, 0.62);
-    --bg-line: rgba(255, 255, 255, 0.14);
-    --bg-silver: #c8ccd2;
-    --bg-silver-bright: #eef0f3;
-    --bg-radius: 26px;
-    --success-bg: rgba(43, 213, 102, 0.14);
-    --success-text: #38a862;
+    /* Clean white + monochrome-black palette with a single "sparkle" AI
+       accent (black circle badge). Stock-status keeps its own green so
+       "in stock" stays an unambiguous, separate signal. */
+    --bg-ink: #14151a;
+    --bg-muted: #6b7280;
+    --bg-line: #e9e9ec;
+    --bg-surface: #f6f6f7;
+    --bg-black: #0c0c0e;
+    --bg-radius: 24px;
+    --success-bg: #e7f6ec;
+    --success-text: #1f8a4c;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
@@ -42,7 +41,7 @@
   }
 
   @keyframes bg-pulse-ring {
-    0%, 100% { transform: scale(0.96); opacity: 0.3; }
+    0%, 100% { transform: scale(0.96); opacity: 0.35; }
     50% { transform: scale(1.1); opacity: 0; }
   }
 
@@ -52,7 +51,7 @@
   }
 
   @keyframes bg-dot-bounce {
-    0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
     40% { transform: translateY(-4px); opacity: 1; }
   }
 
@@ -70,33 +69,35 @@
 
   .bg-shopper-launcher {
     position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background:
-      radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.2), transparent 38%),
-      linear-gradient(150deg, #1c1c1f, var(--bg-black));
-    color: #fff;
+    height: 56px;
+    padding: 0 20px 0 6px;
+    border-radius: 999px;
+    border: 1px solid var(--bg-line);
+    background: #fff;
+    color: var(--bg-ink);
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 255, 255, 0.14);
+    gap: 10px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
     animation: bg-launcher-float 2.8s infinite ease-in-out;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .bg-shopper-launcher:hover {
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.2);
   }
 
   .bg-shopper-launcher:active {
-    transform: scale(0.94);
+    transform: scale(0.96);
   }
 
   .bg-shopper-launcher:after {
     content: "";
     position: absolute;
     inset: -6px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    border-radius: 26px;
+    border: 1px solid rgba(12, 12, 14, 0.18);
+    border-radius: 999px;
     animation: bg-pulse-ring 2.7s infinite;
     pointer-events: none;
   }
@@ -109,18 +110,26 @@
     display: none;
   }
 
-  .bg-shopper-launcher-icons {
+  .bg-shopper-launcher-badge {
     position: relative;
-    width: 26px;
-    height: 26px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(150deg, #2a2a2e, var(--bg-black));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
   }
 
   .bg-shopper-launcher svg {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 11px;
+    left: 11px;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
@@ -139,22 +148,32 @@
     transform: rotate(0deg) scale(1);
   }
 
+  .bg-shopper-launcher-label {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: opacity 0.25s ease;
+  }
+
+  .bg-shopper-launcher-label.fading {
+    opacity: 0;
+  }
+
+  .bg-shopper-launcher-wrap.is-open .bg-shopper-launcher-label {
+    display: none;
+  }
+
   .bg-shopper-panel {
     position: fixed;
     left: 50%;
-    bottom: 100px;
+    bottom: 92px;
     width: min(390px, calc(100vw - 32px));
     height: min(650px, calc(100svh - 124px));
     border: 1px solid var(--bg-line);
     border-radius: var(--bg-radius);
     color: var(--bg-ink);
-    background:
-      radial-gradient(circle at 16% 4%, rgba(255, 255, 255, 0.12), transparent 30%),
-      radial-gradient(circle at 92% 16%, rgba(200, 204, 210, 0.12), transparent 34%),
-      linear-gradient(160deg, #101012f0, #08080aeb);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
+    background: #fff;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.2);
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -174,70 +193,54 @@
     transform: translateX(-50%) translateY(0) scale(1);
   }
 
-  .bg-shopper-panel:before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 100% 12px;
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), transparent 55%);
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), transparent 55%);
-  }
-
   .bg-shopper-header {
-    position: relative;
-    z-index: 1;
     padding: 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--bg-line);
   }
 
   .bg-shopper-header-main {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
   }
 
   .bg-shopper-logo {
     position: relative;
-    width: 48px;
-    height: 48px;
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background:
-      radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2), transparent 42%),
-      linear-gradient(150deg, #1d1d20, var(--bg-black));
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.18), 0 8px 22px rgba(0, 0, 0, 0.4);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(150deg, #2a2a2e, var(--bg-black));
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: var(--bg-silver-bright);
+    color: #fff;
   }
 
   .bg-shopper-logo svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   .bg-shopper-eyebrow {
     margin: 0;
-    color: var(--bg-silver);
+    color: var(--bg-muted);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .bg-shopper-header strong {
     display: block;
     margin-top: 2px;
-    color: #fff;
+    color: var(--bg-ink);
     font-size: 17px;
     line-height: 1.15;
     letter-spacing: -0.02em;
@@ -257,15 +260,15 @@
     width: 7px;
     height: 7px;
     border-radius: 999px;
-    background: var(--bg-silver-bright);
-    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1);
+    background: #2bd566;
+    box-shadow: 0 0 0 4px rgba(43, 213, 102, 0.18);
     font-style: normal;
   }
 
   .bg-shopper-close {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-line);
+    color: var(--bg-ink);
     cursor: pointer;
     width: 34px;
     height: 34px;
@@ -274,13 +277,12 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+    transition: border-color 0.16s ease, background 0.16s ease;
   }
 
   .bg-shopper-close:hover {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.16);
-    transform: translateY(-1px);
+    border-color: #d0d0d4;
+    background: #ececee;
   }
 
   .bg-shopper-close svg {
@@ -289,15 +291,12 @@
   }
 
   .bg-shopper-messages {
-    position: relative;
-    z-index: 1;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     padding: 18px;
     scroll-behavior: smooth;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.32) transparent;
   }
 
   .bg-msg {
@@ -312,20 +311,17 @@
   }
 
   .bg-msg.assistant {
-    border: 1px solid rgba(255, 255, 255, 0.09);
+    border: 1px solid var(--bg-line);
     border-radius: 18px 18px 18px 7px;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+    color: var(--bg-ink);
+    background: var(--bg-surface);
   }
 
   .bg-msg.user {
     margin-left: auto;
-    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 18px 18px 7px;
-    color: #0c0c0e;
-    background: linear-gradient(135deg, #fff, var(--bg-silver));
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    color: #fff;
+    background: var(--bg-black);
   }
 
   .bg-msg.user img {
@@ -347,7 +343,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
+    background: #9a9aa0;
     animation: bg-dot-bounce 1s infinite ease-in-out;
   }
 
@@ -363,21 +359,22 @@
   }
 
   .bg-product-card {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bg-line);
     border-radius: 18px;
     padding: 14px;
-    background: rgba(255, 255, 255, 0.06);
+    background: #fff;
     display: grid;
     grid-template-columns: 84px 1fr;
     column-gap: 14px;
     row-gap: 10px;
     animation: bg-msg-in 0.3s ease-out;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .bg-product-card:hover {
-    border-color: rgba(255, 255, 255, 0.32);
-    background: rgba(255, 255, 255, 0.09);
+    border-color: #d0d0d4;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
   }
 
   .bg-product-card img,
@@ -388,7 +385,7 @@
     height: 84px;
     object-fit: cover;
     border-radius: 14px;
-    background: linear-gradient(135deg, #232326, #101012);
+    background: linear-gradient(135deg, #f1f1f3, #e6e6e9);
   }
 
   .bg-product-meta {
@@ -397,7 +394,7 @@
   }
 
   .bg-product-card a {
-    color: #fff;
+    color: var(--bg-ink);
     font-weight: 650;
     text-decoration: none;
     font-size: 15px;
@@ -406,7 +403,8 @@
   }
 
   .bg-product-card a:hover {
-    color: var(--bg-silver-bright);
+    color: #000;
+    text-decoration: underline;
   }
 
   .bg-product-price {
@@ -414,7 +412,7 @@
     margin-top: 4px;
     font-size: 14px;
     font-weight: 700;
-    color: var(--bg-silver-bright);
+    color: var(--bg-ink);
   }
 
   .bg-product-meta small {
@@ -441,14 +439,14 @@
   }
 
   .bg-stock-pill.out {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--bg-surface);
     color: var(--bg-muted);
   }
 
   .bg-product-cta {
     border: none;
-    background: linear-gradient(135deg, #fff, var(--bg-silver));
-    color: #0c0c0e;
+    background: var(--bg-black);
+    color: #fff;
     border-radius: 12px;
     padding: 10px 16px;
     font-size: 13px;
@@ -457,23 +455,21 @@
     text-decoration: none;
     text-align: center;
     white-space: nowrap;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-    transition: filter 0.16s ease, transform 0.16s ease;
+    transition: opacity 0.16s ease, transform 0.16s ease;
   }
 
   .bg-product-cta:hover {
-    filter: brightness(1.08);
+    opacity: 0.85;
     transform: translateY(-1px);
   }
 
   .bg-product-cta:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: default;
   }
 
   .bg-product-cta.added {
-    background: linear-gradient(135deg, #6fe3a0, #2bd566);
-    color: #06210f;
+    background: #1f8a4c;
   }
 
   .bg-product-cta-row {
@@ -491,13 +487,17 @@
   .bg-view-cart-link {
     text-align: center;
     font-size: 11px;
-    color: var(--bg-silver-bright);
+    color: var(--bg-ink);
     text-decoration: none;
     font-weight: 600;
   }
 
   .bg-view-cart-link:hover {
     text-decoration: underline;
+  }
+
+  .bg-category-tiles-wrap {
+    position: relative;
   }
 
   .bg-category-tiles {
@@ -528,14 +528,14 @@
     height: 88px;
     border-radius: 16px;
     overflow: hidden;
-    background: linear-gradient(135deg, #232326, #101012);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, #f1f1f3, #e6e6e9);
+    border: 1px solid var(--bg-line);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .bg-category-tile:hover .bg-category-tile-image {
-    border-color: var(--bg-silver);
-    box-shadow: 0 4px 14px rgba(200, 204, 210, 0.25);
+    border-color: #c9c9cd;
+    box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1);
   }
 
   .bg-category-tile-image img {
@@ -546,11 +546,9 @@
   }
 
   .bg-category-tile span {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--bg-ink);
     text-align: center;
     line-height: 1.3;
     display: -webkit-box;
@@ -559,9 +557,29 @@
     overflow: hidden;
   }
 
+  .bg-category-tiles-next {
+    position: absolute;
+    right: 0;
+    top: 34px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--bg-line);
+    background: #fff;
+    color: var(--bg-ink);
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .bg-category-tiles-next svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .bg-shopper-suggestions {
-    position: relative;
-    z-index: 1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
@@ -570,30 +588,27 @@
 
   .bg-shopper-suggestions button {
     min-height: 42px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--bg-line);
+    background: var(--bg-surface);
     border-radius: 15px;
     padding: 6px 12px;
     font-size: 12px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--bg-ink);
     cursor: pointer;
     transition: all 0.18s ease;
   }
 
   .bg-shopper-suggestions button:hover {
-    border-color: rgba(255, 255, 255, 0.42);
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
+    border-color: #c9c9cd;
+    background: #ececee;
     transform: translateY(-1px);
   }
 
   .bg-image-preview {
-    position: relative;
-    z-index: 1;
     display: none;
     padding: 8px 18px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--bg-line);
   }
 
   .bg-image-preview.visible { display: block; }
@@ -602,7 +617,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--bg-surface);
     border-radius: 10px;
     padding: 6px 8px;
   }
@@ -624,9 +639,7 @@
   }
 
   .bg-shopper-input {
-    position: relative;
-    z-index: 1;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--bg-line);
     padding: 14px 18px 18px;
     display: flex;
     gap: 10px;
@@ -636,24 +649,24 @@
   .bg-shopper-input input[type="text"] {
     flex: 1;
     min-width: 0;
-    border: 1px solid rgba(255, 255, 255, 0.11);
+    border: 1px solid var(--bg-line);
     border-radius: 999px;
     padding: 13px 16px;
     font-size: 14px;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--bg-ink);
+    background: var(--bg-surface);
     outline: none;
     transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
   }
 
   .bg-shopper-input input[type="text"]::placeholder {
-    color: rgba(255, 255, 255, 0.46);
+    color: var(--bg-muted);
   }
 
   .bg-shopper-input input[type="text"]:focus {
-    border-color: rgba(255, 255, 255, 0.42);
-    background: rgba(255, 255, 255, 0.11);
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+    border-color: #c9c9cd;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(12, 12, 14, 0.06);
   }
 
   .bg-shopper-input input[type="file"] { display: none; }
@@ -661,10 +674,10 @@
   .bg-btn-icon {
     width: 40px;
     height: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bg-line);
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.85);
+    background: var(--bg-surface);
+    color: var(--bg-ink);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -679,8 +692,8 @@
   }
 
   .bg-btn-icon:hover {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.14);
+    border-color: #c9c9cd;
+    background: #ececee;
   }
 
   .bg-btn-send {
@@ -688,19 +701,18 @@
     height: 46px;
     border: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, #fff, var(--bg-silver));
-    color: #0c0c0e;
+    background: var(--bg-black);
+    color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
-    transition: filter 0.16s ease, transform 0.16s ease, opacity 0.16s ease;
+    transition: opacity 0.16s ease, transform 0.16s ease;
   }
 
   .bg-btn-send:hover:not(:disabled) {
-    filter: brightness(1.06);
+    opacity: 0.85;
     transform: translateY(-1px);
   }
 
@@ -725,8 +737,8 @@
   }
 
   .bg-icon-btn-plain:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--bg-surface);
+    color: var(--bg-ink);
   }
 
   .bg-icon-btn-plain svg {
@@ -740,18 +752,16 @@
     content: "";
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(12, 12, 14, 0.35);
-    border-top-color: #0c0c0e;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
     border-radius: 50%;
     animation: bg-spin 0.7s linear infinite;
   }
 
   .bg-lead-gate {
-    position: relative;
-    z-index: 1;
     padding: 16px 18px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--bg-line);
+    background: var(--bg-surface);
     display: none;
   }
 
@@ -762,7 +772,7 @@
   .bg-lead-gate h3 {
     margin: 0 0 4px;
     font-size: 14px;
-    color: #fff;
+    color: var(--bg-ink);
   }
 
   .bg-lead-gate p {
@@ -776,36 +786,32 @@
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--bg-ink);
     margin-bottom: 4px;
   }
 
   .bg-lead-gate input {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid var(--bg-line);
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 14px;
     margin-bottom: 10px;
     outline: none;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .bg-lead-gate input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--bg-ink);
+    background: #fff;
   }
 
   .bg-lead-gate input:focus {
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    border-color: #c9c9cd;
+    box-shadow: 0 0 0 3px rgba(12, 12, 14, 0.08);
   }
 
   .bg-lead-error {
     display: none;
     font-size: 12px;
-    color: #ff8a8a;
+    color: #d72c0d;
     margin: -4px 0 10px;
   }
 
@@ -817,8 +823,8 @@
     width: 100%;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(135deg, #fff, var(--bg-silver));
-    color: #0c0c0e;
+    background: var(--bg-black);
+    color: #fff;
     font-weight: 700;
     font-size: 14px;
     padding: 11px 14px;
@@ -832,9 +838,10 @@
 
   .bg-quiz-card {
     margin: 4px 12px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bg-line);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.06);
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
     overflow: hidden;
     animation: bg-msg-in 0.25s ease-out;
   }
@@ -849,7 +856,7 @@
 
   .bg-quiz-card-header strong {
     font-size: 15px;
-    color: #fff;
+    color: var(--bg-ink);
     line-height: 1.35;
   }
 
@@ -883,31 +890,29 @@
     align-items: center;
     gap: 12px;
     width: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--bg-line);
+    background: var(--bg-surface);
     text-align: left;
     padding: 12px 12px;
     border-radius: 14px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--bg-ink);
     transition: all 0.15s ease;
   }
 
   .bg-quiz-option:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.32);
-    color: #fff;
+    background: #ececee;
+    border-color: #c9c9cd;
   }
 
   .bg-quiz-option-icon {
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background: linear-gradient(150deg, #1c1c1f, var(--bg-black));
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: var(--bg-silver-bright);
+    background: linear-gradient(150deg, #2a2a2e, var(--bg-black));
+    color: #fff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -920,7 +925,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--bg-line);
   }
 
   .bg-quiz-dots {
@@ -933,11 +938,11 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.24);
+    background: var(--bg-line);
   }
 
   .bg-quiz-dot.active {
-    background: var(--bg-silver-bright);
+    background: var(--bg-black);
   }
 
   .bg-quiz-nav {
@@ -945,8 +950,8 @@
     height: 34px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(135deg, #fff, var(--bg-silver));
-    color: #0c0c0e;
+    background: var(--bg-black);
+    color: #fff;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -954,8 +959,8 @@
   }
 
   .bg-quiz-nav:disabled {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.4);
+    background: var(--bg-line);
+    color: var(--bg-muted);
     cursor: not-allowed;
   }
 
@@ -972,7 +977,7 @@
       bottom: 16px;
     }
     .bg-shopper-panel {
-      bottom: 92px;
+      bottom: 84px;
       width: min(390px, calc(100vw - 24px));
       height: min(640px, calc(100svh - 108px));
       border-radius: 22px;
@@ -985,11 +990,6 @@
     }
     .bg-shopper-suggestions {
       grid-template-columns: 1fr;
-    }
-    .bg-shopper-launcher {
-      width: 58px;
-      height: 58px;
-      border-radius: 20px;
     }
   }
 </style>
@@ -1009,24 +1009,24 @@
     root.innerHTML = `
       <div class="bg-shopper-launcher-wrap">
         <button class="bg-shopper-launcher" aria-label="Open shopping assistant" aria-expanded="false">
-          <span class="bg-shopper-launcher-icons">
-            <svg class="bg-launcher-icon--chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+          <span class="bg-shopper-launcher-badge">
+            <svg class="bg-launcher-icon--chat" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287L12 3Z"></path>
             </svg>
             <svg class="bg-launcher-icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </span>
+          <span class="bg-shopper-launcher-label">Shop with AI</span>
         </button>
       </div>
       <section class="bg-shopper-panel" aria-label="BundleGuard shopper assistant">
         <div class="bg-shopper-header">
           <div class="bg-shopper-header-main">
             <div class="bg-shopper-logo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="m9 12 2 2 4-4"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287L12 3Z"></path>
               </svg>
             </div>
             <div>
@@ -1056,7 +1056,14 @@
         </div>
         <div class="bg-shopper-messages">
           <div class="bg-msg assistant">Hi! I can help you find products and check what's in stock. Upload a product photo to find the same item or close alternatives.</div>
-          <div class="bg-category-tiles" style="display:none;"></div>
+          <div class="bg-category-tiles-wrap" style="display:none;">
+            <div class="bg-category-tiles"></div>
+            <button type="button" class="bg-category-tiles-next" aria-label="See more categories">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="bg-shopper-suggestions">
           <button type="button" data-suggestion="Help me choose ✨">Help me choose ✨</button>
@@ -1112,7 +1119,10 @@
     const leadForm = root.querySelector(".bg-lead-form");
     const leadError = root.querySelector(".bg-lead-error");
     const leadSubmit = root.querySelector(".bg-lead-submit");
+    const categoryTilesWrap = root.querySelector(".bg-category-tiles-wrap");
     const categoryTilesEl = root.querySelector(".bg-category-tiles");
+    const categoryTilesNextBtn = root.querySelector(".bg-category-tiles-next");
+    const launcherLabel = root.querySelector(".bg-shopper-launcher-label");
 
     let enabled = true;
     let thinking = false;
@@ -1398,7 +1408,7 @@
 
     function renderCategoryTiles(tiles) {
       if (!tiles || !tiles.length) {
-        categoryTilesEl.style.display = "none";
+        categoryTilesWrap.style.display = "none";
         return;
       }
       categoryTilesEl.innerHTML = "";
@@ -1427,7 +1437,10 @@
         btn.addEventListener("click", () => browseCategory(tile.value, tile.label));
         categoryTilesEl.appendChild(btn);
       });
-      categoryTilesEl.style.display = "flex";
+      categoryTilesWrap.style.display = "block";
+      // Only show the "more" chevron if the row actually overflows.
+      categoryTilesNextBtn.style.display =
+        categoryTilesEl.scrollWidth > categoryTilesEl.clientWidth + 4 ? "flex" : "none";
     }
 
     /** Category tap = free browsing, deterministic results, no lead/AI needed. */
@@ -1766,6 +1779,25 @@
     });
 
     removeImageBtn.addEventListener("click", clearPendingImage);
+
+    categoryTilesNextBtn.addEventListener("click", () => {
+      categoryTilesEl.scrollBy({ left: 210, behavior: "smooth" });
+    });
+
+    // Cycle the launcher's label between a couple of short CTAs — purely
+    // cosmetic, hidden entirely via CSS while the panel is open.
+    const LAUNCHER_PHRASES = ["Shop with AI", "Shop Deals", "Ask Me Anything"];
+    let launcherPhraseIndex = 0;
+    if (launcherLabel) {
+      setInterval(() => {
+        launcherLabel.classList.add("fading");
+        setTimeout(() => {
+          launcherPhraseIndex = (launcherPhraseIndex + 1) % LAUNCHER_PHRASES.length;
+          launcherLabel.textContent = LAUNCHER_PHRASES[launcherPhraseIndex];
+          launcherLabel.classList.remove("fading");
+        }, 250);
+      }, 3200);
+    }
 
     function setPanelOpen(isOpen) {
       panel.classList.toggle("open", isOpen);
